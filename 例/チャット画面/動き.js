@@ -1,5 +1,7 @@
 // する チャットの画面。会話はこの画面が覚えて、送るたびに全部をサーバーへ送ります。
-// サーバーは答えを1行1つの JSON({"content":"…"} か {"error":"…"})で少しずつ返します。
+// ふだんは WebSocket(ws)を1本つないでおき、{"messages":[…]} を送ると、答えが
+// 1つずつの JSON({"content":"…"} か {"error":"…"})で届き、最後に {"done":true} が届きます。
+// WebSocket につなげないときは、POST api/chat で同じ JSON を1行ずつ受け取ります。
 
 const 会話欄 = document.getElementById("会話");
 const 入力欄 = document.getElementById("入力欄");
@@ -8,6 +10,8 @@ const 送るボタン = document.getElementById("送る");
 const 止めるボタン = document.getElementById("止める");
 let 履歴 = [];
 let 中断 = null;
+let 接続 = null;      // 開いている WebSocket
+let WebSocket可 = true; // つなげなかったら、fetch に切り替える
 
 fetch("api/info")
   .then((r) => r.json())
@@ -29,6 +33,53 @@ function 送受中にする(中) {
   文欄.disabled = 中;
 }
 
+function WebSocketを開く() {
+  if (接続 && 接続.readyState === WebSocket.OPEN) return Promise.resolve(接続);
+  return new Promise((成功, 失敗) => {
+    const s = new WebSocket(new URL("ws", location.href).href.replace(/^http/, "ws"));
+    s.onopen = () => { 接続 = s; 成功(s); };
+    s.onerror = () => 失敗(new Error("WebSocket につなげませんでした"));
+  });
+}
+
+// WebSocket で聞く。{"done":true} が届けば終わり。止めるときは接続を閉じる(次はつなぎ直す)
+async function WebSocketで聞く(本文, 受け取る, 合図) {
+  const s = await WebSocketを開く();
+  await new Promise((成功, 失敗) => {
+    s.onmessage = (e) => {
+      const 通知 = JSON.parse(e.data);
+      if (通知.done) 成功();
+      else 受け取る(通知);
+    };
+    s.onclose = () => { 接続 = null; 失敗(合図.aborted ? new DOMException("止めました", "AbortError") : new Error("WebSocket が切れました")); };
+    合図.addEventListener("abort", () => s.close());
+    s.send(本文);
+  });
+}
+
+// POST api/chat で聞く。答えは1行1つの JSON
+async function fetchで聞く(本文, 受け取る, 合図) {
+  const r = await fetch("api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: 本文,
+    signal: 合図,
+  });
+  if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
+  const 読み手 = r.body.pipeThrough(new TextDecoderStream()).getReader();
+  let 残り = "";
+  for (;;) {
+    const { value, done } = await 読み手.read();
+    if (done) break;
+    残り += value;
+    const 行一覧 = 残り.split("\n");
+    残り = 行一覧.pop();
+    for (const 行 of 行一覧) {
+      if (行.trim()) 受け取る(JSON.parse(行));
+    }
+  }
+}
+
 async function 送る() {
   const 質問 = 文欄.value.trim();
   if (!質問 || 中断) return;
@@ -40,30 +91,24 @@ async function 送る() {
   let 誤り = "";
   中断 = new AbortController();
   送受中にする(true);
+  const 受け取る = (通知) => {
+    if (通知.content) 答え += 通知.content;
+    if (通知.error) 誤り = 通知.error;
+    答え欄.textContent = 答え;
+    会話欄.scrollTop = 会話欄.scrollHeight;
+  };
+  const 本文 = JSON.stringify({ messages: 履歴 });
   try {
-    const r = await fetch("api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: 履歴 }),
-      signal: 中断.signal,
-    });
-    if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
-    const 読み手 = r.body.pipeThrough(new TextDecoderStream()).getReader();
-    let 残り = "";
-    for (;;) {
-      const { value, done } = await 読み手.read();
-      if (done) break;
-      残り += value;
-      const 行一覧 = 残り.split("\n");
-      残り = 行一覧.pop();
-      for (const 行 of 行一覧) {
-        if (!行.trim()) continue;
-        const 通知 = JSON.parse(行);
-        if (通知.content) 答え += 通知.content;
-        if (通知.error) 誤り = 通知.error;
-        答え欄.textContent = 答え;
-        会話欄.scrollTop = 会話欄.scrollHeight;
+    if (WebSocket可) {
+      try {
+        await WebSocketで聞く(本文, 受け取る, 中断.signal);
+      } catch (e) {
+        if (接続 !== null || 答え || e.name === "AbortError" || e.message !== "WebSocket につなげませんでした") throw e;
+        WebSocket可 = false; // つなげなかった: これからは fetch で聞く
+        await fetchで聞く(本文, 受け取る, 中断.signal);
       }
+    } else {
+      await fetchで聞く(本文, 受け取る, 中断.signal);
     }
   } catch (e) {
     if (e.name !== "AbortError") 誤り = String(e.message || e);
