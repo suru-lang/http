@@ -26,6 +26,9 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y clang
       - name: kumu と suruc を入れる
+        # @main は Go のモジュールのプロキシが少し前の main を覚えていることがあるので、GitHub から直接取る
+        env:
+          GOPROXY: direct
         run: |
           go install github.com/suru-lang/suru/cmd/kumu@main
           go install github.com/suru-lang/suru/cmd/suruc@main
