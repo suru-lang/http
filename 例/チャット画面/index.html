@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>する チャット</title>
+<link rel="stylesheet" href="様式.css">
+</head>
+<body>
+<header>
+  <h1>する チャット</h1>
+  <span id="設定">…</span>
+  <button id="新規" type="button">新しい会話</button>
+</header>
+<main id="会話" aria-live="polite">
+  <p class="案内">ローカル LLM と話します。下の欄に書いて Enter で送ります(Shift+Enter で改行)。</p>
+</main>
+<form id="入力欄">
+  <textarea id="文" rows="2" placeholder="メッセージを書く" autofocus></textarea>
+  <button id="送る" type="submit">送る</button>
+  <button id="止める" type="button" hidden>止める</button>
+</form>
+<script src="動き.js"></script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 # kumu 試験 と kumu 点検 を、Linux と macOS で動かします。
-# 例/サイト.suru をバイナリにして起動し、curl で配信を確かめます。
+# 例/サイト.suru と 例/ブラウザチャット.suru をバイナリにして起動し、curl で確かめます。
 name: 試験
 
 on:
@@ -49,4 +49,15 @@ jobs:
           check /../%E7%B5%84.suru "403 text/plain; charset=utf-8"
           check /%2e%2e/%E7%B5%84.suru "403 text/plain; charset=utf-8"
           curl -s http://127.0.0.1:8080/%E7%94%BB%E5%83%8F/%E5%8D%B0.png | cmp - 例/公開/画像/印.png
+          kill %1
+      - name: 例のブラウザチャットに curl で聞く(LLM はいないので、失敗の知らせが流れてくる)
+        run: |
+          ~/go/bin/suruc 例/ブラウザチャット.suru -o 出力/ブラウザチャット
+          ./出力/ブラウザチャット 試験 http://127.0.0.1:9 8090 > 出力/ブラウザチャット.log 2>&1 &
+          for i in $(seq 50); do curl -s -o /dev/null http://127.0.0.1:8090/ && break; sleep 0.2; done
+          curl -s -o /dev/null -w '%{http_code} %{content_type}\n' http://127.0.0.1:8090/ | grep -x '200 text/html; charset=utf-8'
+          curl -s http://127.0.0.1:8090/api/info | grep -F '"model":"試験"'
+          curl -s -D 出力/見出し -X POST -d '{"messages":[{"role":"user","content":"a"}]}' http://127.0.0.1:8090/api/chat | tee 出力/答え
+          grep -i '^transfer-encoding: chunked' 出力/見出し
+          grep -F '{"error":"http://127.0.0.1:9/api/chat に聞けませんでした' 出力/答え
           kill %1
