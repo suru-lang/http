@@ -1,0 +1,52 @@
+# kumu 試験 と kumu 点検 を、Linux と macOS で動かします。
+# 例/サイト.suru をバイナリにして起動し、curl で配信を確かめます。
+name: 試験
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: clang を入れる(Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang
+      - name: kumu と suruc を入れる
+        run: |
+          go install github.com/suru-lang/suru/cmd/kumu@main
+          go install github.com/suru-lang/suru/cmd/suruc@main
+      - name: 試験
+        run: ~/go/bin/kumu 試験
+      - name: 点検
+        run: ~/go/bin/kumu 点検
+      - name: 例のサイトに curl で聞く
+        run: |
+          mkdir -p 出力
+          ~/go/bin/suruc 例/サイト.suru -o 出力/サイト
+          ./出力/サイト > 出力/サイト.log 2>&1 &
+          for i in $(seq 50); do curl -s -o /dev/null http://127.0.0.1:8080/ && break; sleep 0.2; done
+          check() { got=$(curl -s -o /dev/null -w '%{http_code} %{content_type}' --path-as-is "http://127.0.0.1:8080$1"); echo "$1 → $got"; [ "$got" = "$2" ]; }
+          check / "200 text/html; charset=utf-8"
+          check /%E6%A7%98%E5%BC%8F.css "200 text/css; charset=utf-8"
+          check /%E7%94%BB%E5%83%8F/%E5%8D%B0.png "200 image/png"
+          check /%E7%94%BB%E5%83%8F "301 text/plain; charset=utf-8"
+          check /api/x "200 text/plain; charset=utf-8"
+          check /no.html "404 text/plain; charset=utf-8"
+          check /../%E7%B5%84.suru "403 text/plain; charset=utf-8"
+          check /%2e%2e/%E7%B5%84.suru "403 text/plain; charset=utf-8"
+          curl -s http://127.0.0.1:8080/%E7%94%BB%E5%83%8F/%E5%8D%B0.png | cmp - 例/公開/画像/印.png
+          kill %1
