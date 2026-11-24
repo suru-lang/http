@@ -56,7 +56,7 @@ kumu 追加 github.com/suru-lang/http
 ```
 「HTTP/クライアント」 を 読み込む
 
-始めする とは 手順
+始めする とは 入出力手順
   r とは 「http://localhost:8080/」 を クライアント内の取得した 結果
   r の 状態 を 表示する
   r の 本文 を 表示する
@@ -69,11 +69,12 @@ kumu 追加 github.com/suru-lang/http
 「標準」 を 読み込んで 使う
 「HTTP/クライアント」 を 読み込む
 
-累 を 行 で 行表示する とは 手順
+数 を 文字列 で 行表示する は 数 を 返す 入出力動作
+累 を 行 で 行表示する とは 入出力手順
   行 を 表示する
   累 + 1 を 結果にする
 
-始めする とは 手順
+始めする とは 入出力手順
   本文 とは 「{"model":"llama3.2","messages":[{"role":"user","content":"こんにちは"}]}」
   n とは 「http://localhost:11434/api/chat」 に 本文 を 0 から 行表示すること で クライアント内の逐次投稿した 結果
   （n を 文字列化する） + 「 行」 を 表示する
@@ -98,7 +99,8 @@ suru 例/ブラウザチャット.suru モデル名 http://localhost:8081/v1 808
 ```
 「HTTP」 を 読み込む
 
-要求 を 接続 で 案内する とは 手順
+HTTP内の要求 を 数 で 案内する は 数 を 返す 入出力動作
+要求 を 接続 で 案内する とは 入出力手順
   接続 へ 「text/plain; charset=utf-8」 で HTTP内の逐次開始する
   「1つ目」 を 接続 へ HTTP内の逐次送信する
   「2つ目」 を 接続 へ HTTP内の逐次送信する
@@ -116,8 +118,8 @@ suru 例/ブラウザチャット.suru モデル名 http://localhost:8081/v1 808
 「HTTP/WebSocket」 を 読み込む
 
 # 文字の伝言には「返事: 」を付けて返す
-WebSocket内の伝言 を WebSocket内の相手 で 返答する は 数 の 動作
-（文 の WebSocket内の文字伝言） を ws で 返答する とは 「返事: 」 + 文 を ws へ WebSocket内の文字送信する
+WebSocket内の伝言 を WebSocket内の相手 で 返答する は 数 を 返す 入出力動作
+（文 という WebSocket内の文字伝言） を ws で 返答する とは 「返事: 」 + 文 を ws へ WebSocket内の文字送信する
 m を ws で 返答する とは 0 を 結果にする
 
 問い を 接続 で 案内する とは
@@ -132,7 +134,7 @@ m を ws で 返答する とは 0 を 結果にする
 ```
 「HTTP/WebSocket」 を 読み込む
 
-始めする とは 手順
+始めする とは 入出力手順
   ws とは 「ws://localhost:8080/」 を WebSocket内の接続した 結果
   「こんにちは」 を ws へ WebSocket内の文字送信する
   m とは ws から WebSocket内の受信した 結果

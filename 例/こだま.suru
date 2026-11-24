@@ -5,8 +5,8 @@
 「HTTP/WebSocket」 を 読み込む
 
 WebSocket内の伝言 を WebSocket内の相手 で 返答する は 数 を 返す 入出力動作
-（文 の WebSocket内の文字伝言） を ws で 返答する とは 「返事: 」 + 文 を ws へ WebSocket内の文字送信する
-（d の WebSocket内のバイナリ伝言） を ws で 返答する とは d を ws へ WebSocket内のバイナリ送信する
+（文 という WebSocket内の文字伝言） を ws で 返答する とは 「返事: 」 + 文 を ws へ WebSocket内の文字送信する
+（d という WebSocket内のバイナリ伝言） を ws で 返答する とは d を ws へ WebSocket内のバイナリ送信する
 m を ws で 返答する とは 0 を 結果にする
 
 画面 とは 「<!doctype html><meta charset="utf-8"><title>こだま</title><input id="i" value="こんにちは"><button id="b">送る</button><pre id="o"></pre><script>const w=new WebSocket(location.href.replace(/^http/,"ws"));w.onmessage=e=>o.textContent+=e.data+"\n";b.onclick=()=>w.send(i.value);</script>」
