@@ -1,5 +1,5 @@
 # kumu 試験 と kumu 点検 を、Linux と macOS で動かします。
-# 例/サイト.suru と 例/ブラウザチャット.suru をバイナリにして起動し、curl で確かめます。
+# 例/サイト.suru と 例/ブラウザチャット.suru・例/こだま.suru をバイナリにして起動し、curl と Node の WebSocket で確かめます。
 name: 試験
 
 on:
@@ -63,4 +63,27 @@ jobs:
           curl -s -D 出力/見出し -X POST -d '{"messages":[{"role":"user","content":"a"}]}' http://127.0.0.1:8090/api/chat | tee 出力/答え
           grep -i '^transfer-encoding: chunked' 出力/見出し
           grep -F '{"error":"http://127.0.0.1:9/api/chat に聞けませんでした' 出力/答え
+          kill %1
+      - name: 例のブラウザチャットに WebSocket で聞く(LLM はいないので、失敗の知らせと終わりの印が届く)
+        run: |
+          ./出力/ブラウザチャット 試験 http://127.0.0.1:9 8091 > 出力/ブラウザチャット2.log 2>&1 &
+          for i in $(seq 50); do curl -s -o /dev/null http://127.0.0.1:8091/ && break; sleep 0.2; done
+          node -e '
+            const ws = new WebSocket("ws://127.0.0.1:8091/ws"); const got = [];
+            const t = setTimeout(() => { console.error("時間切れ", got); process.exit(1); }, 10000);
+            ws.onopen = () => ws.send(JSON.stringify({ messages: [{ role: "user", content: "a" }] }));
+            ws.onmessage = (e) => { console.log(e.data.trim()); got.push(JSON.parse(e.data)); if (got.at(-1).done) ws.close(); };
+            ws.onclose = () => { clearTimeout(t); process.exit(got.length === 2 && got[0].error.includes("に聞けませんでした") && got[1].done ? 0 : 1); };'
+          kill %1
+      - name: 例のこだまに WebSocket で話す
+        run: |
+          ~/go/bin/suruc 例/こだま.suru -o 出力/こだま
+          ./出力/こだま > 出力/こだま.log 2>&1 &
+          for i in $(seq 50); do curl -s -o /dev/null http://127.0.0.1:8080/ && break; sleep 0.2; done
+          node -e '
+            const ws = new WebSocket("ws://127.0.0.1:8080/"); ws.binaryType = "arraybuffer"; const got = [];
+            const t = setTimeout(() => { console.error("時間切れ", got); process.exit(1); }, 10000);
+            ws.onopen = () => { ws.send("こんにちは"); ws.send(new Uint8Array([1, 2, 255])); ws.send("x".repeat(70000)); };
+            ws.onmessage = (e) => { got.push(typeof e.data === "string" ? e.data.slice(0, 20) + " " + e.data.length : [...new Uint8Array(e.data)].join(",")); if (got.length === 3) ws.close(1000); };
+            ws.onclose = (e) => { clearTimeout(t); console.log(got, e.code); process.exit(got[0] === "返事: こんにちは 9" && got[1] === "1,2,255" && got[2].endsWith(" 70004") && e.code === 1000 ? 0 : 1); };'
           kill %1
