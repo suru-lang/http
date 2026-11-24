@@ -51,7 +51,15 @@ kumu 追加 github.com/suru-lang/http
 
 ## クライアント
 
-`「HTTP/クライアント」 を 読み込む` で、こちらから HTTP の要求を送れます(`http://` だけ。HTTPS はまだです)。
+`「HTTP/クライアント」 を 読み込む` で、こちらから HTTP の要求を送れます。`http://` と `https://` の URL を使えます。
+
+HTTPS には OpenSSL(libssl・libcrypto、1.1.1 以上)を使います。クライアントを使うプログラムは libssl とリンクするので、OpenSSL の開発用のファイルを入れておきます。
+
+- macOS: `brew install openssl@3` して `export PKG_CONFIG_PATH="$(brew --prefix openssl@3)/lib/pkgconfig"`(macOS の中の libssl は使えません)
+- Debian・Ubuntu: `sudo apt install libssl-dev`
+- Fedora: `sudo dnf install openssl-devel`
+
+サーバーだけを使うプログラムには要りません。
 
 ```
 「HTTP/クライアント」 を 読み込む
@@ -202,6 +210,14 @@ m を ws で 返答する とは 0 を 結果にする
 10. **クライアントの URL は `ws://主機:口番/道`。** 口番を省くと 80 です。握手の応答が 101 でない、`Sec-WebSocket-Accept` が合わないときは実行時エラーです。
 11. **ブラウザチャットは WebSocket でつなぐ。** 画面は `/ws` に1本つないでおき、`{"messages":[…]}` を送るたびに、答えの `{"content":"…"}`(失敗は `{"error":"…"}`)を1つずつの伝言で受け取り、最後に `{"done":true}` を受け取ります。止めるボタンは接続を閉じます(次に送るときにつなぎ直します)。WebSocket につなげないときは、今までの `POST /api/chat` で聞きます。サーバーは `直接並行待受する` から `WebSocket内の待受する` に変えました。
 
+### HTTPS
+
+1. **OpenSSL の BIO でつなぐ。** `TLS.suru`(`「HTTP/TLS」`)が `BIO_new_ssl_connect` で名前を引いて TCP でつなぎ、TLS の握手をします。する の「通信」のソケットは表の番号で OS の fd ではないので、つなぐところから OpenSSL に任せます。読むときは `BIO_f_buffer` を重ねて1行ずつ読みます。
+2. **証明書と名前は必ず確かめる。** OS の既定の CA(`SSL_CTX_set_default_verify_paths`、環境変数 `SSL_CERT_FILE` で変えられます)で証明書を確かめ、`SSL_set1_host` で主機の名前と合うか確かめます。SNI も送ります。確かめられなければ「TLS で『主機』の証明書を確かめられませんでした(理由)」の失敗です。確かめを切る引数は作りません。
+3. **`https://` の口番の既定は 443。** クライアントの関数は `http://` と `https://` のどちらも同じ関数で受け取り、中で `経路`(平の接続か暗号の接続)を選びます。使う側の書き方は変わりません。
+4. **失敗したら接続を閉じる。** 送る途中や受け取る途中で失敗しても、接続(TLS の文脈も)を閉じてから失敗を返します。
+5. **OpenSSL はクライアントを使うときだけ要る。** `TLS.suru` を読み込むのは `クライアント.suru` なので、サーバーだけのプログラムは libssl とつなぎません。
+
 ## 試験
 
 ```sh
@@ -209,7 +225,7 @@ kumu 試験
 kumu 点検
 ```
 
-試験は `試験/` に、配るサイトは `試験/サイト/` にあります。CI は例のサイトをバイナリにして起動し、curl で聞いて確かめます。
+試験は `試験/` に、配るサイトは `試験/サイト/` にあります。CI は例のサイトをバイナリにして起動し、curl で聞いて確かめます。HTTPS は、CI で作った CA と証明書で Python の TLS サーバー(`.github/試験/TLS相手.py`)を起こし、`.github/試験/https確認.suru` で GET・少しずつの POST・名前の違う証明書を断ること・CA がなければ断ることを確かめます。
 
 ## 今後の候補
 
@@ -219,8 +235,8 @@ kumu 点検
 - 圧縮(`Accept-Encoding: gzip`)
 - 1つの接続で続けて答える(keep-alive)
 - 道の問い(`?a=1&b=2`)を分けて読む関数
-- HTTP のクライアント
-- WebSocket: `wss://`(TLS)、サブプロトコル(`Sec-WebSocket-Protocol`)、圧縮(permessage-deflate)、大きな伝言を分けて送る、
+- HTTPS のサーバー、クライアントの証明書(相互 TLS)
+- WebSocket: `wss://`(TLS のつなぎ方はできたので、WebSocket のクライアントに組み込む)、サブプロトコル(`Sec-WebSocket-Protocol`)、圧縮(permessage-deflate)、大きな伝言を分けて送る、
   サーバーから定期的に ping を送って切れた相手を見つける(今は待ち時間 0 なので、黙って消えた相手のスレッドは残る)、
   サーバーで覆われていない枠を拒む、閉じる知らせの理由の文
 
