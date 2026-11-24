@@ -4,14 +4,14 @@
 「HTTP」 を 読み込む
 「HTTP/WebSocket」 を 読み込む
 
-WebSocket内の伝言 を WebSocket内の相手 で 返答する は 数 の 動作
+WebSocket内の伝言 を WebSocket内の相手 で 返答する は 数 の 動作 を 返す
 （文 の WebSocket内の文字伝言） を ws で 返答する とは 「返事: 」 + 文 を ws へ WebSocket内の文字送信する
 （d の WebSocket内のバイナリ伝言） を ws で 返答する とは d を ws へ WebSocket内のバイナリ送信する
 m を ws で 返答する とは 0 を 結果にする
 
 画面 とは 「<!doctype html><meta charset="utf-8"><title>こだま</title><input id="i" value="こんにちは"><button id="b">送る</button><pre id="o"></pre><script>const w=new WebSocket(location.href.replace(/^http/,"ws"));w.onmessage=e=>o.textContent+=e.data+"\n";b.onclick=()=>w.send(i.value);</script>」
 
-HTTP内の要求 を 数 で 案内する は 数 の 動作
+HTTP内の要求 を 数 で 案内する は 数 の 動作 を 返す
 問い を 接続 で 案内する とは
   もし 問い が WebSocket内の開始要求である ならば 問い を 接続 に 返答すること で WebSocket内の対話する
   そうでなければ （画面 を HTTP内のHTML応答する） を 接続 へ 問い の 方法 で HTTP内の応答送信する
