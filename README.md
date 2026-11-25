@@ -1,20 +1,22 @@
-# HTTP(する のライブラリ)
+English | [日本語](README_jp.md)
 
-日本語のプログラミング言語「[する](https://github.com/suru-lang/suru)」の HTTP のライブラリです。要求を受け取って応答を返す関数を書くだけで HTTP サーバーになり、フォルダを丸ごと配る静的ファイル配信もできます。中身は全部 する で書いてあり(本体の「通信」「スレッド」「ファイル」の上)、インタプリタでもコンパイルしたバイナリでも同じに動きます。
+# HTTP (a library for Suru)
 
-## 入れ方
+The HTTP library for [Suru (「する」)](https://github.com/suru-lang/suru), a programming language in Japanese. Writing a function that takes a request and returns a response is all it takes to make an HTTP server, and it can also serve a whole folder of static files. It is written entirely in Suru (on top of the core's 「通信」, 「スレッド」 and 「ファイル」), and behaves the same in the interpreter and in compiled binaries.
 
-[kumu](https://github.com/suru-lang/suru#プロジェクトを組むkumu) のプロジェクトで:
+## Installing
+
+In a [kumu](https://github.com/suru-lang/suru#building-projects-kumu) project:
 
 ```sh
 kumu 追加 github.com/suru-lang/http
 ```
 
-する 本体は 0.3.0 以上が要ります(WebSocket のためのビット演算・Base64・SHA-1・`通信内の待機時間設定する` と、例で使う「を 返す」「入出力動作」「入出力手順」が入った版)。
+Suru 0.3.0 or later is required (the version with bitwise operations, Base64, SHA-1 and `通信内の待機時間設定する` for WebSocket, plus 「を 返す」, 「入出力動作」 and 「入出力手順」 used in the examples).
 
-`例/` の関数の型の宣言は `… は 文字列 を 返す` のように「を 返す」で終えています。例を動かすには、これが書けるようになった本体(suru-lang/suru#108 の入った版)が要ります。
+Type declarations of functions in `例/` end with 「を 返す」, as in `… は 文字列 を 返す`. Running the examples needs a version of Suru that can read this (one including suru-lang/suru#108).
 
-## 使い方
+## Usage
 
 ```
 「HTTP」 を 読み込む
@@ -27,7 +29,9 @@ kumu 追加 github.com/suru-lang/http
 8080 を 案内すること で HTTP内の待受する
 ```
 
-フォルダの下のファイルを配るには:
+(要求 = request, 道 = path, 案内する = "guide", the handler; 本文応答する makes a 200 text response, 状態応答する one with a given status.)
+
+To serve the files under a folder:
 
 ```
 「HTTP」 を 読み込む
@@ -35,7 +39,7 @@ kumu 追加 github.com/suru-lang/http
 8080 を （「public」 を HTTP内の配信すること） で HTTP内の動作待受する
 ```
 
-自分の関数と組み合わせるときは、配信する が応答の動作を返すので、ほかの道は自分で答えます。
+To combine it with your own function: 配信する returns a response action, so answer the other paths yourself.
 
 ```
 「標準」 を 読み込んで 使う
@@ -47,25 +51,25 @@ kumu 追加 github.com/suru-lang/http
 8080 を 案内すること で HTTP内の動作待受する
 ```
 
-自分の機械の中からだけ開けるようにするには、ポートの代わりに「アドレス:ポート」を渡します(数のポートは 0.0.0.0 で待ち受けるので、同じネットワークのほかの機械からも開けます)。
+To make it reachable only from your own machine, pass 「ADDRESS:PORT」 instead of a port (a numeric port listens on 0.0.0.0, so other machines on the same network can open it too).
 
 ```
 「127.0.0.1:8080」 を 案内すること で HTTP内の待受する
 ```
 
-例は [例/挨拶.suru](例/挨拶.suru)(関数で答えるサーバー)と [例/サイト.suru](例/サイト.suru)(例/公開 を配るサイト)です。このリポジトリで `suru 例/サイト.suru` と起動し、ブラウザで http://localhost:8080/ を開きます。
+Examples are [例/挨拶.suru](例/挨拶.suru) (a server answering with a function) and [例/サイト.suru](例/サイト.suru) (a site serving 例/公開). In this repository, start it with `suru 例/サイト.suru` and open http://localhost:8080/ in a browser.
 
-## クライアント
+## Client
 
-`「HTTP/クライアント」 を 読み込む` で、こちらから HTTP の要求を送れます。`http://` と `https://` の URL を使えます。
+`「HTTP/クライアント」 を 読み込む` lets you send HTTP requests yourself. `http://` and `https://` URLs are supported.
 
-HTTPS には OpenSSL(libssl・libcrypto、1.1.1 以上)を使います。クライアントを使うプログラムは libssl とリンクするので、OpenSSL の開発用のファイルを入れておきます。
+HTTPS uses OpenSSL (libssl and libcrypto, 1.1.1 or later). Programs using the client link with libssl, so install OpenSSL's development files.
 
-- macOS: `brew install openssl@3` して `export PKG_CONFIG_PATH="$(brew --prefix openssl@3)/lib/pkgconfig"`(macOS の中の libssl は使えません)
-- Debian・Ubuntu: `sudo apt install libssl-dev`
+- macOS: `brew install openssl@3`, then `export PKG_CONFIG_PATH="$(brew --prefix openssl@3)/lib/pkgconfig"` (the libssl inside macOS can't be used)
+- Debian, Ubuntu: `sudo apt install libssl-dev`
 - Fedora: `sudo dnf install openssl-devel`
 
-サーバーだけを使うプログラムには要りません。
+Programs that only use the server don't need it.
 
 ```
 「HTTP/クライアント」 を 読み込む
@@ -77,7 +81,7 @@ HTTPS には OpenSSL(libssl・libcrypto、1.1.1 以上)を使います。クラ�
 始めする
 ```
 
-答えが1行ずつ届く API(ローカル LLM のストリーミングなど)は、届いた行ごとに関数を呼べます。関数は「それまでの値」と「1行」を受け取り、次の値を返す動作です。
+For APIs whose answer arrives line by line (such as local LLM streaming), a function can be called for each line as it arrives. The function receives "the value so far" and "one line", and is an action returning the next value.
 
 ```
 「標準」 を 読み込んで 使う
@@ -95,20 +99,20 @@ HTTPS には OpenSSL(libssl・libcrypto、1.1.1 以上)を使います。クラ�
 始めする
 ```
 
-例の [例/チャット.suru](例/チャット.suru) は、ローカル LLM と話すチャットです。[Ollama](https://ollama.com/) を動かして `suru 例/チャット.suru llama3.2` と起動します。llama.cpp の `llama-server` など OpenAI 互換の API なら、`suru 例/チャット.suru モデル名 http://localhost:8080/v1` のように、/v1 で終わる URL を渡します。
+The example [例/チャット.suru](例/チャット.suru) is a chat with a local LLM. Run [Ollama](https://ollama.com/) and start it with `suru 例/チャット.suru llama3.2`. For OpenAI-compatible APIs such as llama.cpp's `llama-server`, pass a URL ending in /v1, as in `suru 例/チャット.suru MODEL http://localhost:8080/v1`.
 
-## ブラウザでチャット
+## Chat in the browser
 
-[例/ブラウザチャット.suru](例/ブラウザチャット.suru) は、ブラウザからローカル LLM と話す Web アプリです。サーバーもクライアントも する で書いてあり、画面([例/チャット画面](例/チャット画面))は HTML と JavaScript です。LLM の答えは、届いたところから少しずつ画面に出ます。
+[例/ブラウザチャット.suru](例/ブラウザチャット.suru) is a web app for talking with a local LLM from a browser. Both the server and the client are written in Suru, and the page ([例/チャット画面](例/チャット画面)) is HTML and JavaScript. The LLM's answer appears on the page bit by bit as it arrives.
 
 ```sh
 suru 例/ブラウザチャット.suru llama3.2                              # Ollama
-suru 例/ブラウザチャット.suru モデル名 http://localhost:8081/v1 8080  # OpenAI 互換(llama-server など)。3つ目はポート
+suru 例/ブラウザチャット.suru モデル名 http://localhost:8081/v1 8080  # OpenAI-compatible (llama-server etc.); the third is the port
 ```
 
-起動したら http://localhost:8080/ を開きます。`suruc 例/ブラウザチャット.suru -o 出力/チャット` でバイナリにもできます(画面のファイルは今のフォルダの `例/チャット画面` から読みます)。
+Once started, open http://localhost:8080/. It can also be built into a binary with `suruc 例/ブラウザチャット.suru -o 出力/チャット` (the page files are read from `例/チャット画面` under the current folder).
 
-答えを少しずつ返すには、`直接並行待受する` に、要求と接続を受け取る関数を渡します。
+To send the answer bit by bit, pass `直接並行待受する` a function that receives the request and the connection.
 
 ```
 「HTTP」 を 読み込む
@@ -125,7 +129,7 @@ HTTP内の要求 を 数 で 案内する は 数 を 返す 入出力動作
 
 ## WebSocket
 
-`「HTTP/WebSocket」 を 読み込む` で、WebSocket のサーバーとクライアントを書けます(`ws://` だけ。`wss://` はまだです)。サーバーは HTTP と同じポートで、ふつうの要求にも答えられます。
+`「HTTP/WebSocket」 を 読み込む` lets you write WebSocket servers and clients (`ws://` only; `wss://` not yet). The server shares the port with HTTP and can answer ordinary requests too.
 
 ```
 「HTTP」 を 読み込む
@@ -143,7 +147,7 @@ m を ws で 返答する とは 0 を 結果にする
 8080 を 案内すること で WebSocket内の待受する
 ```
 
-ブラウザからは `new WebSocket("ws://localhost:8080/")` でつなげます。クライアントは:
+(The comment says: text messages are answered with 「返事: 」, "reply: ", in front.) From a browser, connect with `new WebSocket("ws://localhost:8080/")`. A client:
 
 ```
 「HTTP/WebSocket」 を 読み込む
@@ -157,101 +161,101 @@ m を ws で 返答する とは 0 を 結果にする
 始めする
 ```
 
-[例/ブラウザチャット.suru](例/ブラウザチャット.suru) の画面は、WebSocket でサーバーとつないで LLM と話します。
+The page of [例/ブラウザチャット.suru](例/ブラウザチャット.suru) connects to the server over WebSocket to talk with the LLM.
 
-する 本体は、`ビット積にする`・`Base64符号化する`・「ハッシュ」・`乱数バイト列取得する`・`通信内の待機時間設定する` が入った版が要ります。
+Suru must be a version with `ビット積にする`, `Base64符号化する`, 「ハッシュ」, `乱数バイト列取得する` and `通信内の待機時間設定する`.
 
-## 決めたこと
+## Decisions
 
-### サーバー
+### Server
 
-1. **要求と応答は組。** `要求` は 方法(「GET」など)・道(「/a?b=1」のまま)・見出し・本文、`応答` は 状態・見出し・本文 です。見出しは「名前 と 値」のリストのリストで、要求の見出しの名前は小文字にそろえます(`要求 から 「X-Name」 を HTTP内の見出し値にする` は大文字小文字を区別せずに探し、なければ「」)。
-2. **応答を作る関数。** `本文 を 本文応答する`(200、text/plain)、`本文 を HTML応答する`(200、text/html)、`404 で 本文 を 状態応答する`、`バイト列 を 「image/png」 で 種類付応答する`、`「/a/」 を 転送応答する`(301 と Location)、`応答 に 「X-A」 と 「1」 を 見出し追加する`。送るときに Content-Length と `Connection: close` を足します。
-3. **応答の本文はバイト列。** 画像などを返すためです。上の関数は文字列を UTF-8 のバイト列にして入れます。`状態 は 200 で 見出し は 空 で 本文 は 「あ」 の 応答` のように手で作る応答は、文字列のままでも送れます(性質「本文可能」で、文字列とバイト列の両方を送ります)。`応答 を 応答文にする` は見出しと本文をつないだ文字列です。
-4. **待ち受ける関数は4つ。** 純粋な関数で答えるなら `待受する`、応答の動作を返す関数(表示する、ファイルを読む、配信する)なら `動作待受する` です。`並行待受する`・`動作並行待受する` は、受け付けた接続を通路で 16 個のスレッドに渡して並行に答えます(遅い相手がいてもほかを待たせません)。
-5. **1件ずつ答えて閉じる。失敗しても止まらない。** 1件ごとに `試行する` で囲むので、関数が実行時エラーになったら 500 を返し、壊れた要求や途中で切れた相手はその接続だけ閉じます(エラーの文は標準エラーに出ます)。つないだまま何も送らない相手は5秒で見切ります。
-6. **HEAD には見出しだけを送る。** どの待ち受けでも、方法が HEAD の要求には、Content-Length を本文の長さにした見出しだけを送ります。
+1. **Requests and responses are records.** A `要求` (request) has 方法 (method, such as 「GET」), 道 (path, as is, like 「/a?b=1」), 見出し (headers) and 本文 (body); an `応答` (response) has 状態 (status), 見出し and 本文. Headers are a list of 「NAME と VALUE」 lists, and request header names are lowercased (`要求 から 「X-Name」 を HTTP内の見出し値にする` searches case-insensitively and gives 「」 if absent).
+2. **Functions that make responses.** `本文 を 本文応答する` (200, text/plain), `本文 を HTML応答する` (200, text/html), `404 で 本文 を 状態応答する`, `バイト列 を 「image/png」 で 種類付応答する`, `「/a/」 を 転送応答する` (301 and Location), and `応答 に 「X-A」 と 「1」 を 見出し追加する`. Content-Length and `Connection: close` are added when sending.
+3. **Response bodies are byte sequences.** This is so images and the like can be returned. The functions above put strings in as UTF-8 bytes. A response built by hand, like `状態 は 200 で 見出し は 空 で 本文 は 「あ」 の 応答`, can be sent with a string body as is (the trait 「本文可能」 sends both strings and byte sequences). `応答 を 応答文にする` is the string of headers and body joined.
+4. **There are four listening functions.** `待受する` for answering with a pure function, and `動作待受する` for a function returning a response action (printing, reading files, 配信する). `並行待受する` and `動作並行待受する` pass accepted connections through a channel to 16 threads that answer in parallel (a slow client doesn't hold up others).
+5. **Answer one request and close. Failures don't stop the server.** Each request is wrapped in `試行する`, so if the function hits a runtime error it returns 500, and broken requests or clients that drop midway close only that connection (the error message goes to standard error). Clients that connect and send nothing are given up on after 5 seconds.
+6. **HEAD gets only headers.** For every listener, a HEAD request gets only the headers, with Content-Length set to the body's length.
 
-### 静的ファイル配信
+### Static file serving
 
-1. **`フォルダ を 要求 で 配信する` は、道に合うファイルの応答の動作。** `「public」 を HTTP内の配信すること` のように部分適用して、`動作待受する` に渡せます。フォルダは今のフォルダからの相対パスか絶対パスです。
-2. **前置き付きは `前置付配信する`。** `「/static」 から 「public」 を 要求 で HTTP内の前置付配信する` は、`/static/…` の道だけを public の下として配り、前置きで始まらない道(`/staticx` も)は 404 です。`/static` だけなら `/static/` へ 301 で転送します。
-3. **GET と HEAD だけに答える。** ほかの方法は 405 で、`Allow: GET, HEAD` を付けます。
-4. **? と # の後ろは見ない。%XX は戻してから調べる。** 道の `%E7%B5%B5` は「絵」になります。UTF-8 として読めない、`%` の後が16進の2桁でない、`%00` は 400 です。`+` は空白にしません(道では `+` のままです)。
-5. **フォルダの外には出さない。** %XX を戻してから「/」で分けた部品に `..`・`.`・`\` があれば 403 です(`%2e%2e` も `..` として拒みます)。さらに、ファイルの実際の場所(シンボリックリンクを解いたもの)がフォルダの実際の場所の下になければ 403 です。フォルダの中からフォルダの外を指すシンボリックリンクは配りません。
-6. **「.」で始まる名前は 404。** `.git` や `.env` を誤って配らないためです。
-7. **ないファイルは 404、読めないファイルは 403。** 読んでいる途中の失敗は、サーバーの `試行する` が受け止めて 500 にします。
-8. **フォルダは index.html。一覧は出さない。** 道がフォルダを指し、`/` で終わっていれば、その中の index.html を返します(なければ 404)。`/` で終わっていなければ `/` を足した道(問いはそのまま)へ 301 で転送します。
-9. **Content-Type は拡張子から。** `MIME表` で決め、大文字小文字は区別しません。テキストの種類(html・htm・css・js・mjs・json・txt・md・csv・xml・svg)には `; charset=utf-8` を付けます。表にないもの・拡張子のないものは `application/octet-stream` です。`道 を 種類判定する` で調べられます。
-10. **ファイルは全部読んでから送る。** 大きなファイルを分けて送ること、キャッシュの見出しは、まだありません(今後の候補)。
+1. **`フォルダ を 要求 で 配信する` is the response action for the file matching the path.** Partially apply it, as in `「public」 を HTTP内の配信すること`, and pass it to `動作待受する`. The folder is a path relative to the current folder, or absolute.
+2. **With a prefix, use `前置付配信する`.** `「/static」 から 「public」 を 要求 で HTTP内の前置付配信する` serves only paths `/static/…` as under public; paths not starting with the prefix (including `/staticx`) are 404. Just `/static` is redirected with 301 to `/static/`.
+3. **Only GET and HEAD are answered.** Other methods get 405 with `Allow: GET, HEAD`.
+4. **What follows ? and # is ignored. %XX is decoded before checking.** `%E7%B5%B5` in a path becomes 「絵」. Paths that aren't valid UTF-8, a `%` not followed by two hex digits, and `%00` are 400. `+` is not turned into a space (it stays `+` in paths).
+5. **Nothing outside the folder is served.** After decoding %XX, if any part split by 「/」 is `..`, `.` or contains `\`, it is 403 (`%2e%2e` is also refused as `..`). Also, if the file's real location (with symbolic links resolved) isn't under the folder's real location, it is 403. Symbolic links inside the folder pointing outside it are not served.
+6. **Names starting with 「.」 are 404.** So that `.git` and `.env` aren't served by mistake.
+7. **Missing files are 404, unreadable files 403.** Failures while reading are caught by the server's `試行する` and become 500.
+8. **Folders give index.html; no listings.** If the path points to a folder and ends in `/`, its index.html is returned (404 if absent). If it doesn't end in `/`, it is redirected with 301 to the path with `/` added (query unchanged).
+9. **Content-Type comes from the extension.** It is decided by `MIME表`, case-insensitively. Text types (html, htm, css, js, mjs, json, txt, md, csv, xml, svg) get `; charset=utf-8`. Anything not in the table, or without an extension, is `application/octet-stream`. `道 を 種類判定する` looks it up.
+10. **Files are read whole before sending.** Sending large files in pieces and cache headers are not available yet (future work).
 
-### 少しずつ送る
+### Sending bit by bit
 
-1. **応答を自分で送る待ち受け。** `直接待受する`・`直接並行待受する` に渡す関数は、`要求` と `接続` を受け取って、応答を自分で送る動作を返します(`（要求 を 数 で 受け取って 甲 の 動作 を 返すこと）`)。関数が終わったら接続を閉じます。失敗したときは、ほかの待ち受けと同じく 500 を送ろうとして閉じます(送り始めた後なら、ブラウザには途中で切れたように見えます)。
-2. **ふつうの応答も送れる。** 道によって少しずつ送るかを決めるので、ふつうの応答は `応答 を 接続 へ 要求 の 方法 で 応答送信する` で送ります(配信する で作った応答も同じです)。
-3. **chunked で送る。** `接続 へ 種類 で 逐次開始する` が 200 と Content-Type・`Cache-Control: no-cache`・`Transfer-Encoding: chunked`・`Connection: close` を送り、`文字列 を 接続 へ 逐次送信する` が1回分を1つの塊にして送り、`接続 へ 逐次終了する` が終わりの印(長さ 0 の塊)を送ります。空の文字列は送りません(終わりの印と間違えないためです)。
-4. **相手が切れたら送信の失敗。** ブラウザが途中でやめると、次の 逐次送信する が実行時エラーになり、その接続だけが終わります(エラーの文は標準エラーに出ます)。
-5. **ブラウザチャットの決まり。** 画面が会話を全部覚えて、送るたびに `POST /api/chat` に `{"messages":[…]}` を送ります。サーバーは messages をそのまま LLM に渡し、答えを1行1つの JSON(`{"content":"…"}`、失敗は `{"error":"…"}`)で流します。サーバーは会話を覚えないので、何人で開いても混ざりません。道は ASCII だけにしました(`要求 の 道` は %XX のままなので)。
+1. **Listeners where you send the response yourself.** The function passed to `直接待受する` and `直接並行待受する` receives the `要求` and the `接続` (connection) and returns an action that sends the response itself (`（要求 を 数 で 受け取って 甲 の 動作 を 返すこと）`). When the function ends, the connection is closed. On failure, like the other listeners, it tries to send 500 and closes (if sending had already started, the browser sees it as cut off midway).
+2. **Ordinary responses can be sent too.** Whether to send bit by bit is decided per path, so ordinary responses are sent with `応答 を 接続 へ 要求 の 方法 で 応答送信する` (responses made by 配信する too).
+3. **It is sent chunked.** `接続 へ 種類 で 逐次開始する` sends 200 with Content-Type, `Cache-Control: no-cache`, `Transfer-Encoding: chunked` and `Connection: close`; `文字列 を 接続 へ 逐次送信する` sends each piece as one chunk; and `接続 へ 逐次終了する` sends the end marker (a chunk of length 0). Empty strings are not sent (so they aren't mistaken for the end marker).
+4. **A dropped client is a send failure.** If the browser stops midway, the next 逐次送信する becomes a runtime error and only that connection ends (the error message goes to standard error).
+5. **The rules of the browser chat.** The page remembers the whole conversation and sends `{"messages":[…]}` to `POST /api/chat` each time. The server passes messages straight to the LLM and streams the answer as one JSON per line (`{"content":"…"}`, or `{"error":"…"}` on failure). The server doesn't remember conversations, so however many people open it, nothing gets mixed. Paths are ASCII only (because `要求 の 道` keeps %XX).
 
-### クライアント
+### Client
 
-1. **`クライアント.suru` に分ける。** サーバーと同じリポジトリの別ファイルで、`「HTTP/クライアント」 を 読み込む` と `クライアント内の…` で使います。型はサーバーと同じ名前の `要求`(方法・宛先・見出し・本文)と `応答`(状態・見出し・本文)です。型の名前はファイルごとなので、サーバーの `要求`・`応答` とはぶつかりません(両方を読み込んだファイルでは `クライアント内の要求` のように書き分けます)。
-2. **関数。** `URL を 取得する`(GET)、`URL に 本文 を 投稿する`(POST、Content-Type は application/json)、`方法 で URL を 要求にする` と `要求 に 名前 と 値 を 見出し追加する`・`要求 に 本文 を 本文設定する` で作った要求を `送付する`。どれも応答の動作です。`応答 から 名前 を 見出し値にする`(大文字小文字を区別しない)、`応答 が 成功状態である`(200〜299)。
-3. **1回ごとにつないで閉じる。** `Connection: close` を送り、応答を読んだら閉じます。本文は Content-Length、chunked、閉じるまでの3つの送り方を読みます。204・304 と HEAD の本文は空です。
-4. **1行ずつ受け取る。** `要求 を 初期 から 処理 で 逐次送付する`・`URL に 本文 を 初期 から 処理 で 逐次投稿する` は、本文が届くたびに、そろった行を順に `処理`(`（甲 を 文字列 で 受け取って 甲 の 動作 を 返すこと）`)に渡し、最後の値を結果にします。行の終わりの改行と復帰は除きます。chunked の塊が行の途中で切れても、次の塊とつないでから渡します。NDJSON(Ollama)も SSE(`data: …` の行と空の行。OpenAI 互換)も、この形で読めます。
-5. **失敗は実行時エラー。** つなげない、相手が途中で切れた、URL が http:// でない、などは実行時エラーで、`試行する` で受け止められます。`取得する` などは 404 なども応答として返しますが、1行ずつ受け取る関数は、状態が 200〜299 でなければ本文を添えた実行時エラーにします。
-6. **つないだ接続は待つ時間を区切らない。** ローカル LLM のように最初の応答まで時間のかかる相手のためです(本体の `通信内の接続する`)。
+1. **It is split into `クライアント.suru`.** A separate file in the same repository as the server, used with `「HTTP/クライアント」 を 読み込む` and `クライアント内の…`. Its types have the same names as the server's: `要求` (方法, 宛先 (target), 見出し, 本文) and `応答` (状態, 見出し, 本文). Type names are per file, so they don't clash with the server's `要求` and `応答` (in a file loading both, write them apart as `クライアント内の要求` and so on).
+2. **Functions.** `URL を 取得する` (GET), `URL に 本文 を 投稿する` (POST, Content-Type application/json), and `送付する` for a request made with `方法 で URL を 要求にする` plus `要求 に 名前 と 値 を 見出し追加する` and `要求 に 本文 を 本文設定する`. All are response actions. `応答 から 名前 を 見出し値にする` (case-insensitive), and `応答 が 成功状態である` (200 to 299).
+3. **Each call connects and closes.** It sends `Connection: close` and closes after reading the response. Bodies are read in all three ways: Content-Length, chunked, and until close. 204, 304 and HEAD have empty bodies.
+4. **Receiving line by line.** `要求 を 初期 から 処理 で 逐次送付する` and `URL に 本文 を 初期 から 処理 で 逐次投稿する` pass each complete line, in order, to `処理` (`（甲 を 文字列 で 受け取って 甲 の 動作 を 返すこと）`) as the body arrives, and give the last value as the result. The trailing newline and carriage return of each line are removed. When a chunk is cut in the middle of a line, it is joined with the next chunk before being passed. Both NDJSON (Ollama) and SSE (`data: …` lines and blank lines; OpenAI-compatible) can be read this way.
+5. **Failures are runtime errors.** Failing to connect, the server dropping midway, a URL that isn't http:// and so on are runtime errors, catchable with `試行する`. `取得する` and the like return 404 and such as responses, but the line-by-line functions turn a status outside 200 to 299 into a runtime error with the body attached.
+6. **Outgoing connections have no wait limit.** This is for servers like local LLMs that take a while to give the first response (the core's `通信内の接続する`).
 
 ### WebSocket
 
-1. **`WebSocket.suru` に分ける。** `「HTTP/WebSocket」 を 読み込む` と `WebSocket内の…` で使います。サーバーとクライアントは同じファイルで、送る・受け取る関数を共有します。
-2. **待ち受けは接続ごとにスレッド。** `WebSocket内の待受する` に渡す関数は `直接待受する` と同じく、要求 と 接続 を受け取って応答を自分で送る動作です。WebSocket はつなぎっぱなしなので、`並行待受する` のような 16 個の限りは付けず、受け付けた接続ごとにスレッドを作ります。関数が終わったら接続を閉じます。
-3. **握手。** `要求 が WebSocket内の開始要求である` は、GET で `Upgrade` に websocket、`Connection` に upgrade(どちらも「,」で区切った中の1つ、大文字小文字を区別しない)があり、`Sec-WebSocket-Key` がある要求です。`要求 を 接続 で WebSocket内の握手する` は 101 と `Sec-WebSocket-Accept`(鍵と決まった文字列をつないだ SHA-1 の Base64)を送り、接続の待ち時間を 0(待ち続ける)にして、`相手` を結果にします。開始要求でなければ 400 を送って実行時エラーです。サブプロトコルと拡張(圧縮)は使いません。
-4. **伝言は選択肢のある型。** `文 の 文字伝言`(文字列)・`データ の バイナリ伝言`(バイト列)・`符号 の 終了伝言`(相手が閉じたとき。符号がなければ 1005)です。`ws から WebSocket内の受信する` は、ping には同じ中身の pong を返して読み捨て、pong も読み捨て、分かれた伝言(続きの枠)はつないでから返します。
-5. **`対話する` は閉じるまで伝言ごとに関数を呼ぶ。** `要求 を 接続 に 処理 で WebSocket内の対話する` は握手して、文字とバイナリの伝言ごとに `処理`(`（伝言 を 相手 で 受け取って 甲 の 動作 を 返すこと）`)を呼び、相手が閉じたらその符号を結果にします。
-6. **送る関数。** `文 を ws へ WebSocket内の文字送信する`・`データ を ws へ WebSocket内のバイナリ送信する`・`ws を WebSocket内の死活確認する`(ping)。1つの伝言は1つの枠で送ります(分けません)。いくつかのスレッドから同じ相手に送っても混ざらないように、相手ごとのロックの中で送ります。
-7. **閉じる。** 相手から閉じる知らせが届いたら、同じ符号で返事をして `終了伝言` を返します。`ws を WebSocket内の終了する` は 1000 を送り、返事を5秒まで待ちます(待つ間の伝言は捨てます)。クライアントは閉じたら接続を切り、サーバーの接続は待ち受けている側が切ります。
-8. **覆い。** クライアントは枠ごとに OS の乱数で作った 4 バイトの鍵で中身を覆い、サーバーは覆いません。サーバーは覆われていない枠もそのまま受け取ります(RFC では切ってよいことになっています)。
-9. **大きさの限り。** 1つの伝言(分かれた伝言はつないだ全体)が 16MB を超えたら実行時エラーにして切ります。知らない種別の枠、始まりのない続きの枠、分かれた伝言の途中の別の伝言も実行時エラーです。文字の伝言が UTF-8 として読めないときも実行時エラーです。
-10. **クライアントの URL は `ws://主機:口番/道`。** 口番を省くと 80 です。握手の応答が 101 でない、`Sec-WebSocket-Accept` が合わないときは実行時エラーです。
-11. **ブラウザチャットは WebSocket でつなぐ。** 画面は `/ws` に1本つないでおき、`{"messages":[…]}` を送るたびに、答えの `{"content":"…"}`(失敗は `{"error":"…"}`)を1つずつの伝言で受け取り、最後に `{"done":true}` を受け取ります。止めるボタンは接続を閉じます(次に送るときにつなぎ直します)。WebSocket につなげないときは、今までの `POST /api/chat` で聞きます。サーバーは `直接並行待受する` から `WebSocket内の待受する` に変えました。
+1. **It is split into `WebSocket.suru`.** Use it with `「HTTP/WebSocket」 を 読み込む` and `WebSocket内の…`. The server and client are in the same file and share the sending and receiving functions.
+2. **The listener makes a thread per connection.** The function passed to `WebSocket内の待受する`, like `直接待受する`, receives the request and connection and is an action that sends the response itself. WebSockets stay connected, so there is no limit of 16 like `並行待受する`; a thread is made for each accepted connection. When the function ends, the connection is closed.
+3. **The handshake.** `要求 が WebSocket内の開始要求である` holds for a GET request with websocket in `Upgrade` and upgrade in `Connection` (each one of the 「,」-separated items, case-insensitive), and a `Sec-WebSocket-Key`. `要求 を 接続 で WebSocket内の握手する` sends 101 and `Sec-WebSocket-Accept` (the Base64 of the SHA-1 of the key joined with the fixed string), sets the connection's wait time to 0 (wait forever), and gives the `相手` (peer) as its result. If it isn't an opening request, it sends 400 and is a runtime error. Subprotocols and extensions (compression) are not used.
+4. **Messages have a type with alternatives.** `文 の 文字伝言` (text, a string), `データ の バイナリ伝言` (binary, bytes) and `符号 の 終了伝言` (close, when the peer closes; 1005 if there is no code). `ws から WebSocket内の受信する` answers pings with a pong of the same contents and discards them, discards pongs, and joins fragmented messages (continuation frames) before returning them.
+5. **`対話する` calls a function for each message until closed.** `要求 を 接続 に 処理 で WebSocket内の対話する` does the handshake, calls `処理` (`（伝言 を 相手 で 受け取って 甲 の 動作 を 返すこと）`) for each text and binary message, and gives the close code as its result when the peer closes.
+6. **Sending functions.** `文 を ws へ WebSocket内の文字送信する`, `データ を ws へ WebSocket内のバイナリ送信する`, and `ws を WebSocket内の死活確認する` (ping). Each message is sent as one frame (not fragmented). Sending happens inside a per-peer lock, so sends from several threads to the same peer don't get mixed.
+7. **Closing.** When a close notice arrives from the peer, it answers with the same code and returns a `終了伝言`. `ws を WebSocket内の終了する` sends 1000 and waits up to 5 seconds for the answer (messages arriving meanwhile are discarded). A client disconnects after closing; for server connections, the listening side disconnects.
+8. **Masking.** Clients mask each frame's contents with a 4-byte key made from OS randomness; servers don't mask. The server also accepts unmasked frames as they are (the RFC allows dropping them).
+9. **Size limits.** A message (the whole of a fragmented one) over 16MB is a runtime error and the connection is dropped. Unknown frame types, continuation frames without a start, and another message in the middle of a fragmented one are runtime errors too. So is a text message that isn't valid UTF-8.
+10. **Client URLs are `ws://HOST:PORT/PATH`.** Without a port, 80. A handshake response that isn't 101, or a `Sec-WebSocket-Accept` that doesn't match, is a runtime error.
+11. **The browser chat connects over WebSocket.** The page keeps one connection to `/ws`, and each time it sends `{"messages":[…]}`, it receives the answer's `{"content":"…"}` (or `{"error":"…"}` on failure) one message at a time, and finally `{"done":true}`. The stop button closes the connection (it reconnects on the next send). If it can't connect over WebSocket, it asks with the old `POST /api/chat`. The server changed from `直接並行待受する` to `WebSocket内の待受する`.
 
 ### HTTPS
 
-1. **OpenSSL の BIO でつなぐ。** `TLS.suru`(`「HTTP/TLS」`)が `BIO_new_ssl_connect` で名前を引いて TCP でつなぎ、TLS の握手をします。する の「通信」のソケットは表の番号で OS の fd ではないので、つなぐところから OpenSSL に任せます。読むときは `BIO_f_buffer` を重ねて1行ずつ読みます。
-2. **証明書と名前は必ず確かめる。** OS の既定の CA(`SSL_CTX_set_default_verify_paths`、環境変数 `SSL_CERT_FILE` で変えられます)で証明書を確かめ、`SSL_set1_host` で主機の名前と合うか確かめます。SNI も送ります。確かめられなければ「TLS で『主機』の証明書を確かめられませんでした(理由)」の失敗です。確かめを切る引数は作りません。
-3. **`https://` の口番の既定は 443。** クライアントの関数は `http://` と `https://` のどちらも同じ関数で受け取り、中で `経路`(平の接続か暗号の接続)を選びます。使う側の書き方は変わりません。
-4. **失敗したら接続を閉じる。** 送る途中や受け取る途中で失敗しても、接続(TLS の文脈も)を閉じてから失敗を返します。
-5. **OpenSSL はクライアントを使うときだけ要る。** `TLS.suru` を読み込むのは `クライアント.suru` なので、サーバーだけのプログラムは libssl とつなぎません。
+1. **Connections use OpenSSL's BIO.** `TLS.suru` (`「HTTP/TLS」`) resolves the name and connects over TCP with `BIO_new_ssl_connect`, then does the TLS handshake. Sockets of Suru's 「通信」 are numbers in a table, not OS fds, so connecting is left to OpenSSL from the start. Reading stacks `BIO_f_buffer` on top to read line by line.
+2. **Certificates and names are always verified.** The certificate is verified with the OS's default CAs (`SSL_CTX_set_default_verify_paths`; the environment variable `SSL_CERT_FILE` changes it), and `SSL_set1_host` checks that it matches the host name. SNI is sent too. If verification fails, it is the failure 「TLS で『主機』の証明書を確かめられませんでした(理由)」 ("couldn't verify the certificate of 『HOST』 over TLS (reason)"). No argument to turn verification off is provided.
+3. **The default port for `https://` is 443.** The client functions take both `http://` and `https://` with the same functions and choose the `経路` (route: a plain or encrypted connection) inside. How you write code doesn't change.
+4. **On failure, the connection is closed.** Even if sending or receiving fails midway, the connection (and the TLS context) is closed before the failure is returned.
+5. **OpenSSL is needed only when using the client.** `TLS.suru` is loaded by `クライアント.suru`, so server-only programs don't link with libssl.
 
-### 待ち受ける先
+### Where to listen
 
-1. **待ち受ける関数の「を」は、ポートの数か「アドレス:ポート」の文字列。** `待受する`・`動作待受する`・`並行待受する`・`動作並行待受する`・`直接待受する`・`直接並行待受する`・`WebSocket内の待受する` のどれにも、`8080` の代わりに `「127.0.0.1:8080」` を渡せます。数なら今までどおり 0.0.0.0(すべて)で待ち受けます。関数の名前を増やさずに選べるよう、性質「待受先」(数 と 文字列 が実装)にしました。
-2. **文字列は最後の「:」で分ける。** 前がアドレス、後ろがポートです。`「localhost:8080」` のような名前、`「[::1]:8080」` のような角括弧の IPv6 も書けます(角括弧は外して本体の `ポート を アドレス に 通信内の待受開始する` に渡します)。`「:8080」` のようにアドレスを省くと 0.0.0.0 です。「:」がなければ「待ち受ける先は 127.0.0.1:8080 のように アドレス:ポート で書いてください(…)」の失敗です。
-3. **`先 を 待受口開始する` で待受口だけ開ける。** 待ち受ける関数が使う性質の関数で、待受口の番号を結果にする動作です。性質の関数なので「HTTP内の」を付けずに書きます。本体の 0.2.0 以上が要ります(アドレスを受け取る `待受開始する`)。
+1. **The 「を」 of listening functions is a numeric port or an 「ADDRESS:PORT」 string.** Every one of `待受する`, `動作待受する`, `並行待受する`, `動作並行待受する`, `直接待受する`, `直接並行待受する` and `WebSocket内の待受する` accepts `「127.0.0.1:8080」` instead of `8080`. A number listens on 0.0.0.0 (all) as before. To choose without adding more function names, this is the trait 「待受先」 (implemented by numbers and strings).
+2. **Strings are split at the last 「:」.** The front is the address, the back the port. Names like `「localhost:8080」` and bracketed IPv6 like `「[::1]:8080」` can be written (the brackets are removed before passing to the core's `ポート を アドレス に 通信内の待受開始する`). Leaving out the address, as in `「:8080」`, gives 0.0.0.0. Without 「:」 it is the failure 「待ち受ける先は 127.0.0.1:8080 のように アドレス:ポート で書いてください(…)」 ("write where to listen as ADDRESS:PORT, like 127.0.0.1:8080").
+3. **`先 を 待受口開始する` only opens the listener.** It is the trait function used by the listening functions, an action giving the listener number. Being a trait function, it is written without 「HTTP内の」. It needs Suru 0.2.0 or later (`待受開始する` accepting an address).
 
-## 試験
+## Tests
 
 ```sh
 kumu 試験
 kumu 点検
 ```
 
-試験は `試験/` に、配るサイトは `試験/サイト/` にあります。CI は例のサイトをバイナリにして起動し、curl で聞いて確かめます。HTTPS は、CI で作った CA と証明書で Python の TLS サーバー(`.github/試験/TLS相手.py`)を起こし、`.github/試験/https確認.suru` で GET・少しずつの POST・名前の違う証明書を断ること・CA がなければ断ることを確かめます。
+Tests are in `試験/`, and the site to serve is in `試験/サイト/`. CI builds the example site into a binary, starts it, and checks it with curl. For HTTPS, CI creates a CA and certificate, starts a Python TLS server (`.github/試験/TLS相手.py`), and `.github/試験/https確認.suru` checks GET, a bit-by-bit POST, refusing a certificate for a different name, and refusing when the CA is missing.
 
-## 今後の候補
+## Future work
 
-- キャッシュ: `Last-Modified`・`ETag` を付け、`If-Modified-Since`・`If-None-Match` に 304 で答える(本体にファイルの更新時刻を取る仕組みが要る)
-- 大きなファイルを少しずつ読んで送る、`Range` に 206 で答える
-- `MIME表` を使う側で足せるようにする(表を受け取る版の 配信する)
-- 圧縮(`Accept-Encoding: gzip`)
-- 1つの接続で続けて答える(keep-alive)
-- 道の問い(`?a=1&b=2`)を分けて読む関数
-- HTTPS のサーバー、クライアントの証明書(相互 TLS)
-- WebSocket: `wss://`(TLS のつなぎ方はできたので、WebSocket のクライアントに組み込む)、サブプロトコル(`Sec-WebSocket-Protocol`)、圧縮(permessage-deflate)、大きな伝言を分けて送る、
-  サーバーから定期的に ping を送って切れた相手を見つける(今は待ち時間 0 なので、黙って消えた相手のスレッドは残る)、
-  サーバーで覆われていない枠を拒む、閉じる知らせの理由の文
+- Caching: add `Last-Modified` and `ETag`, and answer `If-Modified-Since` and `If-None-Match` with 304 (the core needs a way to get file modification times)
+- Read and send large files bit by bit, answer `Range` with 206
+- Let users extend `MIME表` (a version of 配信する that takes a table)
+- Compression (`Accept-Encoding: gzip`)
+- Answer several requests on one connection (keep-alive)
+- A function that parses the query (`?a=1&b=2`)
+- HTTPS servers, client certificates (mutual TLS)
+- WebSocket: `wss://` (TLS connections now work, so build them into the WebSocket client), subprotocols (`Sec-WebSocket-Protocol`), compression (permessage-deflate), sending large messages fragmented,
+  periodic pings from the server to find dropped peers (the wait time is 0 now, so threads of peers that silently vanish remain),
+  refusing unmasked frames on the server, and the reason text of close notices
 
-## ライセンス
+## License
 
 [MIT](LICENSE)
