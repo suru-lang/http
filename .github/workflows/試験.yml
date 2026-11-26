@@ -35,6 +35,7 @@ jobs:
         # @main は Go のモジュールのプロキシが少し前の main を覚えていることがあるので、GitHub から直接取る
         env:
           GOPROXY: direct
+          GONOSUMDB: github.com/suru-lang/*
         run: |
           go install github.com/suru-lang/suru/cmd/kumu@main
           go install github.com/suru-lang/suru/cmd/suruc@main
