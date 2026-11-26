@@ -12,7 +12,7 @@ In a [kumu](https://github.com/suru-lang/suru#building-projects-kumu) project:
 kumu 追加 github.com/suru-lang/http
 ```
 
-Suru 0.3.0 or later is required (the version with bitwise operations, Base64, SHA-1 and `通信内の待機時間設定する` for WebSocket, plus 「を 返す」, 「入出力動作」 and 「入出力手順」 used in the examples).
+Suru 0.7.0 or later is required (the library and the examples write procedures with 「以下の手順です … 以上です」).
 
 Type declarations of functions in `例/` end with 「を 返す」, as in `… は 文字列 を 返す`. Running the examples needs a version of Suru that can read this (one including suru-lang/suru#108).
 
