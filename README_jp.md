@@ -12,7 +12,7 @@
 kumu 追加 github.com/suru-lang/http
 ```
 
-する 本体は 0.7.0 以上が要ります(ライブラリと例が手順を「以下の手順です … 以上です」で書くため)。
+する 本体は 0.9.0 以上が要ります(ライブラリと例が手順を「以下の手順です … 以上です」で、ライブラリが C の関数を「以下の外部の入出力動作です … 以上です」で書くため)。
 
 Windows では、MSYS2 の UCRT64 のシェルで clang・lld・pkgconf(`pacman -S mingw-w64-ucrt-x86_64-clang mingw-w64-ucrt-x86_64-lld mingw-w64-ucrt-x86_64-pkgconf`)と、する 0.8.0 以上(Windows に対応した最初の版)を使います。
 
