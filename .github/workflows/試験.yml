@@ -136,7 +136,9 @@ jobs:
       - name: kumu を入れる
         env:
           GOPROXY: direct
-        run: go install github.com/suru-lang/suru/cmd/kumu@ff847e8aa6e374b95635497b032d5788b50c44cb
+          # main を足したすぐ後は、sum.golang.org がまだその版を知らないことがある
+          GONOSUMDB: github.com/suru-lang/*
+        run: go install github.com/suru-lang/suru/cmd/kumu@a94900e953dfcb737b1fe99501b9369ffbdf8401
       - name: 試験
         run: |
           export PATH="$(cygpath -u "$(go env GOPATH)")/bin:$PATH"
