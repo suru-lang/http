@@ -21,40 +21,29 @@
 
 # --- C の関数 ---
 
-数 を 確保する は 番地 の 動作
-n を 確保する とは 外部の「malloc」
-番地 を 解放する は 無 の 動作
-p を 解放する とは 外部の「free」
+以下の外部の入出力動作です
+  数 を 確保する は 「malloc」 で 番地 を 返します
+  番地 を 解放する は 「free」 で 無 を 返します
 
-客方式取得する は 番地 の 動作
-客方式取得する とは 外部の「TLS_client_method」
-番地 を 文脈作成する は 番地 の 動作
-m を 文脈作成する とは 外部の「SSL_CTX_new」
-番地 を 文脈解放する は 無 の 動作
-c を 文脈解放する とは 外部の「SSL_CTX_free」
-番地 を 既定証明書設定する は 整数 の 動作
-c を 既定証明書設定する とは 外部の「SSL_CTX_set_default_verify_paths」
-番地 を 検証設定する は 無 の 動作
-c を 検証設定する とは 外部の「SSL_CTX_set_verify」（c と 1 と 0）
+  客方式取得する は 「TLS_client_method」 で 番地 を 返します
+  番地 を 文脈作成する は 「SSL_CTX_new」 で 番地 を 返します
+  番地 を 文脈解放する は 「SSL_CTX_free」 で 無 を 返します
+  番地 を 既定証明書設定する は 「SSL_CTX_set_default_verify_paths」 で 整数 を 返します
+  c を 検証設定する とは 「SSL_CTX_set_verify」（c と 1 と 0） で 番地 を 受け取って 無 を 返します
 
-番地 を 暗号BIO作成する は 番地 の 動作
-c を 暗号BIO作成する とは 外部の「BIO_new_ssl_connect」
-緩衝方式取得する は 番地 の 動作
-緩衝方式取得する とは 外部の「BIO_f_buffer」
-番地 を BIO作成する は 番地 の 動作
-m を BIO作成する とは 外部の「BIO_new」
-番地 を 番地 に BIO重ねする は 番地 の 動作
-上 を 下 に BIO重ねする とは 外部の「BIO_push」
-番地 を BIO全解放する は 無 の 動作
-b を BIO全解放する とは 外部の「BIO_free_all」
+  番地 を 暗号BIO作成する は 「BIO_new_ssl_connect」 で 番地 を 返します
+  緩衝方式取得する は 「BIO_f_buffer」 で 番地 を 返します
+  番地 を BIO作成する は 「BIO_new」 で 番地 を 返します
+  番地 を 番地 に BIO重ねする は 「BIO_push」 で 番地 を 返します
+  番地 を BIO全解放する は 「BIO_free_all」 で 無 を 返します
 
-# BIO_ctrl(b, 命令, 値, 先)。外部の関数は1つの名前で1回しか宣言できないので、文字列も番地にして渡す
-#   BIO_set_conn_hostname(b, "主機:口") … 命令 BIO_C_SET_CONNECT=100
-#   BIO_do_handshake(b)                 … 命令 BIO_C_DO_STATE_MACHINE=101
-#   BIO_get_ssl(b, &ssl)                … 命令 BIO_C_GET_SSL=110
-#   BIO_flush(b)                        … 命令 BIO_CTRL_FLUSH=11
-番地 を 数 で 数 に 番地 から BIO制御する は 数 の 動作
-b を 命令 で 値 に 先 から BIO制御する とは 外部の「BIO_ctrl」
+  # BIO_ctrl(b, 命令, 値, 先)。外部の関数は1つの名前で1回しか宣言できないので、文字列も番地にして渡す
+  #   BIO_set_conn_hostname(b, "主機:口") … 命令 BIO_C_SET_CONNECT=100
+  #   BIO_do_handshake(b)                 … 命令 BIO_C_DO_STATE_MACHINE=101
+  #   BIO_get_ssl(b, &ssl)                … 命令 BIO_C_GET_SSL=110
+  #   BIO_flush(b)                        … 命令 BIO_CTRL_FLUSH=11
+  番地 を 数 で 数 に 番地 から BIO制御する は 「BIO_ctrl」 で 数 を 返します
+以上です
 
 # C の文字列(終わりに 0)を確保する。使い終わったら 解放する
 文字列 を C文字列確保する は 番地 の 動作
@@ -82,27 +71,20 @@ b を pp で SSL取得する とは b を 110 で 0 に pp から BIO制御す�
 番地 を BIO流出する は 数 の 動作
 b を BIO流出する とは b を 11 で 0 に （0 を 番地にする） から BIO制御する
 
-# SSL_set_tlsext_host_name(s, 名前) = SSL_ctrl(s, SSL_CTRL_SET_TLSEXT_HOSTNAME=55, TLSEXT_NAMETYPE_host_name=0, 名前)
-番地 を 文字列 で 名前通知する は 数 の 動作
-s を 名前 で 名前通知する とは 外部の「SSL_ctrl」（s と 55 と 0 と 名前）
-番地 を 文字列 で 確認名設定する は 整数 の 動作
-s を 名前 で 確認名設定する とは 外部の「SSL_set1_host」
-番地 を 検証結果取得する は 数 の 動作
-s を 検証結果取得する とは 外部の「SSL_get_verify_result」
-数 を 検証理由にする は 文字列 の 動作
-n を 検証理由にする とは 外部の「X509_verify_cert_error_string」
+以下の外部の入出力動作です
+  # SSL_set_tlsext_host_name(s, 名前) = SSL_ctrl(s, SSL_CTRL_SET_TLSEXT_HOSTNAME=55, TLSEXT_NAMETYPE_host_name=0, 名前)
+  s を 名前 で 名前通知する とは 「SSL_ctrl」（s と 55 と 0 と 名前） で 番地 を 文字列 で 受け取って 数 を 返します
+  番地 を 文字列 で 確認名設定する は 「SSL_set1_host」 で 整数 を 返します
+  番地 を 検証結果取得する は 「SSL_get_verify_result」 で 数 を 返します
+  数 を 検証理由にする は 「X509_verify_cert_error_string」 で 文字列 を 返します
 
-番地 を 番地 で 整数 に 行読取する は 整数 の 動作
-b を p で n に 行読取する とは 外部の「BIO_gets」
-番地 を 番地 で 整数 に 読取する は 整数 の 動作
-b を p で n に 読取する とは 外部の「BIO_read」
-番地 を バイト列 で 整数 に 書取する は 整数 の 動作
-b を d で n に 書取する とは 外部の「BIO_write」
+  番地 を 番地 で 整数 に 行読取する は 「BIO_gets」 で 整数 を 返します
+  番地 を 番地 で 整数 に 読取する は 「BIO_read」 で 整数 を 返します
+  番地 を バイト列 で 整数 に 書取する は 「BIO_write」 で 整数 を 返します
 
-誤り番号取得する は 数 の 動作
-誤り番号取得する とは 外部の「ERR_get_error」
-数 を 誤り文取得する は 文字列 の 動作
-e を 誤り文取得する とは 外部の「ERR_error_string」（e と 0）
+  誤り番号取得する は 「ERR_get_error」 で 数 を 返します
+  e を 誤り文取得する とは 「ERR_error_string」（e と 0） で 数 を 受け取って 文字列 を 返します
+以上です
 
 # --- 失敗 ---
 
