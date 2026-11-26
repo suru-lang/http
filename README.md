@@ -14,7 +14,7 @@ kumu 追加 github.com/suru-lang/http
 
 Suru 0.7.0 or later is required (the library and the examples write procedures with 「以下の手順です … 以上です」).
 
-On Windows, use the MSYS2 UCRT64 shell with clang, lld and pkgconf (`pacman -S mingw-w64-ucrt-x86_64-clang mingw-w64-ucrt-x86_64-lld mingw-w64-ucrt-x86_64-pkgconf`) and a Suru release newer than 0.7.0 (the first with Windows support).
+On Windows, use the MSYS2 UCRT64 shell with clang, lld and pkgconf (`pacman -S mingw-w64-ucrt-x86_64-clang mingw-w64-ucrt-x86_64-lld mingw-w64-ucrt-x86_64-pkgconf`) and Suru 0.8.0 or later (the first release with Windows support).
 
 Type declarations of functions in `例/` end with 「を 返す」, as in `… は 文字列 を 返す`. Running the examples needs a version of Suru that can read this (one including suru-lang/suru#108).
 
