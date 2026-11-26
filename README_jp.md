@@ -14,6 +14,8 @@ kumu 追加 github.com/suru-lang/http
 
 する 本体は 0.7.0 以上が要ります(ライブラリと例が手順を「以下の手順です … 以上です」で書くため)。
 
+Windows では、MSYS2 の UCRT64 のシェルで clang・lld・pkgconf(`pacman -S mingw-w64-ucrt-x86_64-clang mingw-w64-ucrt-x86_64-lld mingw-w64-ucrt-x86_64-pkgconf`)と、0.7.0 より後の する(Windows に対応した最初の版)を使います。
+
 `例/` の関数の型の宣言は `… は 文字列 を 返す` のように「を 返す」で終えています。例を動かすには、これが書けるようになった本体(suru-lang/suru#108 の入った版)が要ります。
 
 ## 使い方
@@ -66,6 +68,7 @@ HTTPS には OpenSSL(libssl・libcrypto、1.1.1 以上)を使います。クラ�
 - macOS: `brew install openssl@3` して `export PKG_CONFIG_PATH="$(brew --prefix openssl@3)/lib/pkgconfig"`(macOS の中の libssl は使えません)
 - Debian・Ubuntu: `sudo apt install libssl-dev`
 - Fedora: `sudo dnf install openssl-devel`
+- Windows(MSYS2 の UCRT64): `pacman -S mingw-w64-ucrt-x86_64-openssl`
 
 サーバーだけを使うプログラムには要りません。
 
@@ -244,7 +247,7 @@ kumu 試験
 kumu 点検
 ```
 
-試験は `試験/` に、配るサイトは `試験/サイト/` にあります。CI は例のサイトをバイナリにして起動し、curl で聞いて確かめます。HTTPS は、CI で作った CA と証明書で Python の TLS サーバー(`.github/試験/TLS相手.py`)を起こし、`.github/試験/https確認.suru` で GET・少しずつの POST・名前の違う証明書を断ること・CA がなければ断ることを確かめます。
+試験は `試験/` に、配るサイトは `試験/サイト/` にあります。CI は例のサイトをバイナリにして起動し、curl で聞いて確かめます。HTTPS は、CI で作った CA と証明書で Python の TLS サーバー(`.github/試験/TLS相手.py`)を起こし、`.github/試験/https確認.suru` で GET・少しずつの POST・名前の違う証明書を断ること・CA がなければ断ることを確かめます。CI は `kumu 試験` と `kumu 点検` を Linux・macOS・Windows(MSYS2)で動かします。
 
 ## 今後の候補
 

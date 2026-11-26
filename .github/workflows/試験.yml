@@ -1,4 +1,4 @@
-# kumu 試験 と kumu 点検 を、Linux と macOS で動かします。
+# kumu 試験 と kumu 点検 を、Linux と macOS と Windows(MSYS2)で動かします。
 # HTTPS のクライアントは、手元の TLS の相手(試しの CA の証明書)と、本物の https://example.com/ で確かめます。
 # 例/サイト.suru と 例/ブラウザチャット.suru・例/こだま.suru をバイナリにして起動し、curl と Node の WebSocket で確かめます。
 name: 試験
@@ -35,6 +35,7 @@ jobs:
         # @main は Go のモジュールのプロキシが少し前の main を覚えていることがあるので、GitHub から直接取る
         env:
           GOPROXY: direct
+          GONOSUMDB: github.com/suru-lang/*
         run: |
           go install github.com/suru-lang/suru/cmd/kumu@main
           go install github.com/suru-lang/suru/cmd/suruc@main
@@ -112,3 +113,38 @@ jobs:
         run: |
           ~/go/bin/suruc .github/試験/本物確認.suru -o 出力/本物確認
           ./出力/本物確認
+
+  # Windows では MSYS2 の UCRT64(clang・lld・Go・pkg-config・OpenSSL)で kumu 試験 と kumu 点検 を動かす。
+  # lld は日本語の道(出力/)に書くのに要る
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            git
+            mingw-w64-ucrt-x86_64-clang
+            mingw-w64-ucrt-x86_64-lld
+            mingw-w64-ucrt-x86_64-go
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-openssl
+      - name: kumu を入れる
+        env:
+          GOPROXY: direct
+          # main を足したすぐ後は、sum.golang.org がまだその版を知らないことがある
+          GONOSUMDB: github.com/suru-lang/*
+        run: go install github.com/suru-lang/suru/cmd/kumu@main
+      - name: 試験
+        run: |
+          export PATH="$(cygpath -u "$(go env GOPATH)")/bin:$PATH"
+          kumu 試験
+      - name: 点検
+        run: |
+          export PATH="$(cygpath -u "$(go env GOPATH)")/bin:$PATH"
+          kumu 点検
