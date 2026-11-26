@@ -139,7 +139,7 @@ jobs:
           GOPROXY: direct
           # main を足したすぐ後は、sum.golang.org がまだその版を知らないことがある
           GONOSUMDB: github.com/suru-lang/*
-        run: go install github.com/suru-lang/suru/cmd/kumu@a94900e953dfcb737b1fe99501b9369ffbdf8401
+        run: go install github.com/suru-lang/suru/cmd/kumu@main
       - name: 試験
         run: |
           export PATH="$(cygpath -u "$(go env GOPATH)")/bin:$PATH"
