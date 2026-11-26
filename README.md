@@ -14,6 +14,8 @@ kumu 追加 github.com/suru-lang/http
 
 Suru 0.7.0 or later is required (the library and the examples write procedures with 「以下の手順です … 以上です」).
 
+On Windows, use the MSYS2 UCRT64 shell with clang, lld and pkgconf (`pacman -S mingw-w64-ucrt-x86_64-clang mingw-w64-ucrt-x86_64-lld mingw-w64-ucrt-x86_64-pkgconf`) and a Suru release newer than 0.7.0 (the first with Windows support).
+
 Type declarations of functions in `例/` end with 「を 返す」, as in `… は 文字列 を 返す`. Running the examples needs a version of Suru that can read this (one including suru-lang/suru#108).
 
 ## Usage
@@ -68,6 +70,7 @@ HTTPS uses OpenSSL (libssl and libcrypto, 1.1.1 or later). Programs using the cl
 - macOS: `brew install openssl@3`, then `export PKG_CONFIG_PATH="$(brew --prefix openssl@3)/lib/pkgconfig"` (the libssl inside macOS can't be used)
 - Debian, Ubuntu: `sudo apt install libssl-dev`
 - Fedora: `sudo dnf install openssl-devel`
+- Windows (MSYS2 UCRT64): `pacman -S mingw-w64-ucrt-x86_64-openssl`
 
 Programs that only use the server don't need it.
 
@@ -246,7 +249,7 @@ kumu 試験
 kumu 点検
 ```
 
-Tests are in `試験/`, and the site to serve is in `試験/サイト/`. CI builds the example site into a binary, starts it, and checks it with curl. For HTTPS, CI creates a CA and certificate, starts a Python TLS server (`.github/試験/TLS相手.py`), and `.github/試験/https確認.suru` checks GET, a bit-by-bit POST, refusing a certificate for a different name, and refusing when the CA is missing.
+Tests are in `試験/`, and the site to serve is in `試験/サイト/`. CI builds the example site into a binary, starts it, and checks it with curl. For HTTPS, CI creates a CA and certificate, starts a Python TLS server (`.github/試験/TLS相手.py`), and `.github/試験/https確認.suru` checks GET, a bit-by-bit POST, refusing a certificate for a different name, and refusing when the CA is missing. CI runs `kumu 試験` and `kumu 点検` on Linux, macOS and Windows (MSYS2).
 
 ## Future work
 
