@@ -12,7 +12,7 @@ In a [kumu](https://github.com/suru-lang/suru#building-projects-kumu) project:
 kumu 追加 github.com/suru-lang/http
 ```
 
-Suru 0.9.0 or later is required (the library and the examples write procedures with 「以下の手順です … 以上です」, and the library writes its C functions with 「以下の外部の入出力動作です … 以上です」).
+Suru 0.9.1 or later is required (the library and the examples write procedures with 「以下の手順です … 以上です」, and the library writes its C functions with 「以下は外部の入出力動作です … 以上です」).
 
 On Windows, use the MSYS2 UCRT64 shell with clang, lld and pkgconf (`pacman -S mingw-w64-ucrt-x86_64-clang mingw-w64-ucrt-x86_64-lld mingw-w64-ucrt-x86_64-pkgconf`) and Suru 0.8.0 or later (the first release with Windows support).
 
