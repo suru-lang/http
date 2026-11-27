@@ -107,6 +107,25 @@ For APIs whose answer arrives line by line (such as local LLM streaming), a func
 
 The example [例/チャット.suru](例/チャット.suru) is a chat with a local LLM. Run [Ollama](https://ollama.com/) and start it with `suru 例/チャット.suru llama3.2`. For OpenAI-compatible APIs such as llama.cpp's `llama-server`, pass a URL ending in /v1, as in `suru 例/チャット.suru MODEL http://localhost:8080/v1`.
 
+Images and other binary bodies are received as bytes. `開始送付する` sends the request and reads up to the headers, and `塊受信する` passes the body, a chunk of bytes at a time, to a function.
+
+```
+「標準」 を 読み込んで 使う
+「ファイル」 を 読み込む
+「HTTP/クライアント」 を 読み込む
+
+数 の リスト を バイト列 で 塊集めする は 数 の リスト を 返す 入出力動作
+累 を 塊 で 塊集めする とは 累 + （塊 を 数列にする） を 結果にする
+
+始めする とは 以下の入出力手順です
+  受 とは 「GET」 で 「https://example.com/印.png」 を クライアント内の要求にして クライアント内の開始送付した 結果
+  受 の 頭 の 状態行 を 表示する
+  xs とは 受 を 空 から 塊集めすること で クライアント内の塊受信した 結果
+  （xs を バイト列組立する） を 「印.png」 へ ファイル内のバイト列書出する
+  以上です
+始めする
+```
+
 ## Chat in the browser
 
 [例/ブラウザチャット.suru](例/ブラウザチャット.suru) is a web app for talking with a local LLM from a browser. Both the server and the client are written in Suru, and the page ([例/チャット画面](例/チャット画面)) is HTML and JavaScript. The LLM's answer appears on the page bit by bit as it arrives.
@@ -213,6 +232,10 @@ Suru must be a version with `ビット積にする`, `Base64符号化する`, �
 4. **Receiving line by line.** `要求 を 初期 から 処理 で 逐次送付する` and `URL に 本文 を 初期 から 処理 で 逐次投稿する` pass each complete line, in order, to `処理` (`（甲 を 文字列 で 受け取って 甲 の 動作 を 返すこと）`) as the body arrives, and give the last value as the result. The trailing newline and carriage return of each line are removed. When a chunk is cut in the middle of a line, it is joined with the next chunk before being passed. Both NDJSON (Ollama) and SSE (`data: …` lines and blank lines; OpenAI-compatible) can be read this way.
 5. **Failures are runtime errors.** Failing to connect, the server dropping midway, a URL that isn't http:// and so on are runtime errors, catchable with `試行する`. `取得する` and the like return 404 and such as responses, but the line-by-line functions turn a status outside 200 to 299 into a runtime error with the body attached.
 6. **Outgoing connections have no wait limit.** This is for servers like local LLMs that take a while to give the first response (the core's `通信内の接続する`).
+7. **Receiving the body as bytes.** `要求 を 開始送付する` sends the request, reads up to the end of the headers and gives a `受信口` (路, 頭, 方法). `頭` is an `応答頭`: `状態行` (such as `HTTP/1.1 200 OK`, as received), `状態`, `見出し` (names in lower case) and `元見出し` (names spelled as received). `受信口 を 初期 から 処理 で 塊受信する` passes each non-empty chunk of bytes (64KB at most) to `処理` (`（甲 を バイト列 で 受け取って 甲 の 動作 を 返すこと）`), closes, and gives the last value. `受信口 を 受信中止する` closes without reading the body. The body is read in the same three ways; when the server closes before Content-Length bytes arrive, it is a runtime error.
+8. **The request body is bytes.** `要求` keeps its body as `バイト列`. `本文設定する` turns a string into UTF-8, and `要求 に バイト列 を バイト列本文設定する` puts bytes in as they are.
+9. **The default headers can be replaced.** The client sends `Host`, `User-Agent: suru-http`, `Accept: */*`, `Connection: close`, `Authorization` (from the URL) and `Content-Length`. A header given with `見出し追加する` under the same name (ignoring case) replaces the default one, and a header whose value is 「」 is not sent (this removes a default). `Content-Length` is sent when the body is not empty, or for POST, PUT and PATCH.
+10. **Reading URLs.** Everything from `#` on is not sent. `user:password@` before the host becomes Basic authentication (`%XX` decoded). IPv6 addresses are written in brackets, as in `http://[::1]:8080/`. `http://host?a=1` is the path `/?a=1`.
 
 ### WebSocket
 
@@ -249,7 +272,7 @@ kumu 試験
 kumu 点検
 ```
 
-Tests are in `試験/`, and the site to serve is in `試験/サイト/`. CI builds the example site into a binary, starts it, and checks it with curl. For HTTPS, CI creates a CA and certificate, starts a Python TLS server (`.github/試験/TLS相手.py`), and `.github/試験/https確認.suru` checks GET, a bit-by-bit POST, refusing a certificate for a different name, and refusing when the CA is missing. CI runs `kumu 試験` and `kumu 点検` on Linux, macOS and Windows (MSYS2).
+Tests are in `試験/`, and the site to serve is in `試験/サイト/`. CI builds the example site into a binary, starts it, and checks it with curl. For HTTPS, CI creates a CA and certificate, starts a Python TLS server (`.github/試験/TLS相手.py`), and `.github/試験/https確認.suru` checks GET, a bit-by-bit POST, receiving and sending binary bodies, refusing a certificate for a different name, and refusing when the CA is missing. CI runs `kumu 試験` and `kumu 点検` on Linux, macOS and Windows (MSYS2).
 
 ## Future work
 
