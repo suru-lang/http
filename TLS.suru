@@ -1,24 +1,16 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 sugarsweetrobotics(LICENSE)
-# 「する」の TLS(OpenSSL の libssl を外部の関数として呼びます)。HTTP クライアントの https:// に使います。
-# 使うファイルに 「HTTP/TLS」 を 読み込む と書き、TLS内の暗号接続する のように「TLS内の」を付けて使います。
+# TLS for Suru. It calls OpenSSL's libssl through external functions, and is used for https:// in the HTTP client.
+# Write `「HTTP/TLS」 を 読み込む` in your file and use the names with the `TLS内の` prefix, like `TLS内の暗号接続する`.
 #
-#   ホスト に ポート で 暗号接続する      … つないで TLS の握手をし、証明書とホスト名を確かめて 暗号路 を結果にする
-#   路 から 行受信する                    … 1行(終わりの改行を含む。相手が閉じていれば「」)
-#   路 から バイト数 を 受信する          … そのバイト数まで(閉じたら、そこまで)
-#   文字列 を 路 へ 送信する              … 送ったバイト数
-#   バイト列 を 路 へ バイト列送信する    … 送ったバイト数
-#   路 から バイト数 を バイト列受信する  … そのバイト数まで(閉じたら、そこまで)のバイト列
-#   路 を 切断する                        … 閉じる
-#
-# 証明書は OpenSSL の既定の場所の CA で確かめます(環境変数 SSL_CERT_FILE・SSL_CERT_DIR で変えられます)。
-# 確かめられなければ「証明書を確かめられませんでした」の実行時エラーです。どれも動作で、失敗は実行時エラーです。
+# Certificates are checked with the CA certificates in OpenSSL's default place (change it with the environment variables SSL_CERT_FILE and SSL_CERT_DIR).
+# When a certificate cannot be verified, it is the runtime error 「証明書を確かめられませんでした」. Every function is an action, and a failure is a runtime error.
 外部の「ssl」 を 読み込む
 外部の「crypto」 を 読み込む
 外部の「c」 を 読み込む
 「標準」 を 読み込んで 使う
 
-# 読むほうは OpenSSL のバッファの BIO を重ねたもの(行で読むため)。文脈は閉じるときに放す
+# A TLS connection. The reading side is OpenSSL's buffering BIO on top of the connection (to read by lines). The context is freed when the connection is closed.
 暗号路 とは 読口 と 文脈 の 組
 
 # --- C の関数 ---
@@ -108,6 +100,7 @@ n を 何 で 正確認する とは もし n > 0 ならば n を 結果にす�
 
 # --- つなぐ ---
 
+# Connects to 主機 on port 口, does the TLS handshake, checks the certificate and the host name, and gives the connection.
 文字列 に 数 で 暗号接続する は 暗号路 の 動作
 主機 に 口 で 暗号接続する とは 以下の手順です
   m とは 客方式取得した 結果
@@ -187,6 +180,7 @@ pp を 番地読取する とは 以下の手順です
 
 行長さ とは 65536
 
+# One line, with its newline (「」 when the other side has closed).
 暗号路 から 行受信する は 文字列 の 動作
 路 から 行受信する とは 以下の手順です
   p とは 行長さ + 1 を 確保した 結果
@@ -200,13 +194,14 @@ pp を 番地読取する とは 以下の手順です
 番地 から 数 を 正分取得する は バイト列 の 動作
 p から n を 正分取得する とは もし n > 0 ならば p から n を バイト列取得する そうでなければ （空 を バイト列組立する） を 結果にする
 
+# Up to n bytes as a string (fewer when the other side closes first).
 暗号路 から 数 を 受信する は 文字列 の 動作
 路 から n を 受信する とは 以下の手順です
   b とは 路 から n を バイト列受信した 結果
   b を 文字列にして 結果にする
   以上です
 
-# n バイトそろうか、相手が閉じるまで読む
+# Up to n bytes: it reads until it has n bytes or the other side closes.
 暗号路 から 数 を バイト列受信する は バイト列 の 動作
 路 から n を バイト列受信する とは 以下の手順です
   p とは （もし n > 0 ならば n そうでなければ 1） を 確保した 結果
@@ -226,9 +221,11 @@ p から n を 正分取得する とは もし n > 0 ならば p から n を �
   もし k <= 0 ならば 済 を 結果にする そうでなければ 路 から p に n を 済 + k で 読み続けする
   以上です
 
+# Sends the string and gives the number of bytes sent.
 文字列 を 暗号路 へ 送信する は 数 の 動作
 s を 路 へ 送信する とは （s を バイト列にする） を 路 へ バイト列送信する
 
+# Sends the bytes and gives the number of bytes sent.
 バイト列 を 暗号路 へ バイト列送信する は 数 の 動作
 d を 路 へ バイト列送信する とは 以下の手順です
   n とは d を バイト長にする
@@ -237,6 +234,7 @@ d を 路 へ バイト列送信する とは 以下の手順です
   n を 結果にする
   以上です
 
+# Closes the connection.
 暗号路 を 切断する は 数 の 動作
 路 を 切断する とは 以下の手順です
   路 の 読口 を BIO全解放する

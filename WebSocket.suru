@@ -1,28 +1,23 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 sugarsweetrobotics(LICENSE)
-# 「する」の WebSocket(RFC 6455。サーバーとクライアント。ws:// だけで、wss:// はまだです)
-# 使うファイルに 「HTTP/WebSocket」 を 読み込む と書き、WebSocket内の待受する のように「WebSocket内の」を付けて使います。
+# WebSocket for Suru (RFC 6455), as a server and as a client. Only ws:// is supported, not wss:// yet.
+# Write `「HTTP/WebSocket」 を 読み込む` in your file and use the names with the `WebSocket内の` prefix, like `WebSocket内の待受する`.
 #
-# サーバー:
-#   8080 を 案内すること で WebSocket内の待受する … 接続ごとにスレッドを作り、案内する に 要求 と 接続 を渡す
-#                                                  (HTTP内の直接待受する と同じ形。WebSocket は長くつなぎっぱなしなので、数に限りを付けない)
-#   「127.0.0.1:8080」 を 案内すること で WebSocket内の待受する … 同じ機械の中からだけ受け付ける
-#   要求 が WebSocket内の開始要求である          … WebSocket を始める要求(Upgrade: websocket)か
-#   要求 を 接続 に 処理 で WebSocket内の対話する … 握手して、閉じるまで届いた伝言ごとに 処理 を呼ぶ
-#   要求 を 接続 で WebSocket内の握手する        … 握手だけして 相手 を結果にする(あとは 受信する などを自分で呼ぶ)
-# クライアント:
-#   「ws://localhost:8080/ws」 を WebSocket内の接続する … つないで握手し、相手 を結果にする
-# どちらでも:
-#   相手 から WebSocket内の受信する              … 次の伝言(ping には自分で pong を返し、分かれた伝言はつなぐ)
-#   文 を 相手 へ WebSocket内の文字送信する       … 文字の伝言を送る
-#   データ を 相手 へ WebSocket内のバイナリ送信する … バイナリの伝言を送る
-#   相手 を WebSocket内の終了する                … 閉じる知らせ(1000)を送り、相手の返事を待って切る
-#   相手 を WebSocket内の死活確認する            … ping を送る(返事の pong は 受信する が読み捨てる)
+# Server:
 #
-# 伝言は 文 の 文字伝言 か データ の バイナリ伝言 か 符号 の 終了伝言 です(終了伝言 は相手が閉じたとき。符号は 1000 など)。
-# 相手 は 番号(通信の接続)・錠(送るときに使うロック)・客側(クライアントなら 真)の組です。
-# クライアントは送る中身を乱数で覆い、閉じたら接続を切ります。サーバーの接続は、待ち受けている側(待受する など)が切ります。
-# いくつかのスレッドから同じ相手に送っても、1つの伝言が混ざらないように 錠 で順に送ります。
+# - `8080 を 案内すること で WebSocket内の待受する`: makes a thread for each connection and gives the request and the connection to `案内する` (the same form as `HTTP内の直接待受する`; WebSocket connections stay open long, so there is no limit on their number).
+# - `「127.0.0.1:8080」 を 案内すること で WebSocket内の待受する`: accept only from the same machine.
+# - `要求 が WebSocket内の開始要求である`: whether the request starts a WebSocket (Upgrade: websocket).
+# - `要求 を 接続 に 処理 で WebSocket内の対話する`: does the handshake and calls `処理` for each message until the connection closes.
+# - `要求 を 接続 で WebSocket内の握手する`: only does the handshake and gives a `相手` (then call `受信する` and so on yourself).
+#
+# Client: `「ws://localhost:8080/ws」 を WebSocket内の接続する` connects, does the handshake and gives a `相手`.
+#
+# Both: `受信する` reads the next message, `文字送信する` and `バイナリ送信する` send one, `終了する` closes and `死活確認する` sends a ping.
+#
+# A message is `文 の 文字伝言`, `データ の バイナリ伝言` or `符号 の 終了伝言` (when the other side closes; the code is 1000 and so on).
+# The client masks what it sends with random numbers and cuts the connection when it closes. A server connection is cut by the listening side (`待受する` and so on).
+# Sending to the same peer from several threads is safe: the lock in `相手` sends one message at a time.
 
 「標準」 を 読み込んで 使う
 「通信」 を 読み込む
@@ -31,8 +26,11 @@
 「ハッシュ」 を 読み込む
 「HTTP」 を 読み込む
 
+# A WebSocket peer: 番号 (the connection of 「通信」), 錠 (the lock used when sending) and 客側 (真 for a client).
 相手 とは 番号 と 錠 と 客側 の 組
+# A message: `文 の 文字伝言` (text), `データ の バイナリ伝言` (binary) or `符号 の 終了伝言` (the other side closed, with its close code).
 伝言 とは 文 の 文字伝言 か データ の バイナリ伝言 か 符号 の 終了伝言
+# Used inside the library: one frame, with the FIN bit, the opcode and the payload.
 フレーム とは 終端 と 種別 と 中身 の 組
 
 # 1つの伝言の大きさの上限(これより大きいと実行時エラーにして切る)
@@ -51,10 +49,12 @@
 文字列 を 語整形する は 文字列
 x を 語整形する とは x を 空白除去して 小文字にする
 
+# 真 if the request asks to start a WebSocket (Upgrade: websocket).
 HTTP内の要求 が 開始要求である は 真偽
 r が 開始要求である とは
   r の 方法 = 「GET」 かつ （r から 「upgrade」 を HTTP内の見出し値にする） が 「websocket」 を 語含有である かつ （r から 「connection」 を HTTP内の見出し値にする） が 「upgrade」 を 語含有である かつ （r から 「sec-websocket-key」 を HTTP内の見出し値にする） ≠ 「」
 
+# Answers the request with the WebSocket handshake on the connection and gives the peer.
 HTTP内の要求 を 数 で 握手する は 相手 の 動作
 r を 接続 で 握手する とは
   もし r が 開始要求である ならば r を 接続 で 承認送信する
@@ -166,12 +166,15 @@ xs を 接続 へ 一括送信する とは 以下の手順です
   0 を 結果にする
   以上です
 
+# Sends a text message.
 文字列 を 相手 へ 文字送信する は 数 の 動作
 文 を ws へ 文字送信する とは （文 を バイト列にする） を ws へ 1 で 枠送信する
 
+# Sends a binary message.
 バイト列 を 相手 へ バイナリ送信する は 数 の 動作
 データ を ws へ バイナリ送信する とは データ を ws へ 2 で 枠送信する
 
+# Sends a ping. `受信する` reads and drops the pong that comes back.
 相手 を 死活確認する は 数 の 動作
 ws を 死活確認する とは （「suru」 を バイト列にする） を ws へ 9 で 枠送信する
 
@@ -181,6 +184,7 @@ ws を 死活確認する とは （「suru」 を バイト列にする） を 
 # --- 伝言を受け取る ---
 # 始 は分かれた伝言の最初の種別(1 か 2。なければ 0)、断片 はそれまでの中身
 
+# The next message. It answers a ping with a pong by itself and joins a message that comes in several frames.
 相手 から 受信する は 伝言 の 動作
 ws から 受信する とは ws から 0 で 空 を 伝言組立する
 
@@ -228,7 +232,7 @@ ws を 中身 で 終了返信する とは 以下の手順です
   （符号 の 終了伝言） を 結果にする
   以上です
 
-# こちらから閉じる: 1000 を送り、相手の返事(閉じる知らせ)を待って切る。待つ間に届いた伝言は捨てる
+# Closes from this side: sends the close code 1000, waits for the other side's close and cuts the connection. Messages that arrive while waiting are dropped.
 相手 を 終了する は 数 の 動作
 ws を 終了する とは 以下の手順です
   （1000 を 終了中身にする） を ws へ 8 で 枠送信する
@@ -250,6 +254,7 @@ ws を 返事待機する とは 以下の手順です
 # --- 対話する: 握手して、閉じるまで伝言ごとに 処理 を呼ぶ ---
 # 処理 は （伝言 を 相手 で 受け取って 甲 の 動作 を 返すこと）。終了伝言 は 処理 に渡さず、その符号を結果にします。
 
+# Does the handshake for the request, then calls 処理 with each message and the peer until the connection closes.
 HTTP内の要求 を 数 に （伝言 を 相手 で 受け取って 甲 の 動作 を 返すこと） で 対話する は 数 の 動作
 r を 接続 に 処理 で 対話する とは 以下の手順です
   ws とは r を 接続 で 握手した 結果
@@ -290,12 +295,14 @@ ws に m を 処理 で 伝言処理する とは 以下の手順です
   口 を 処理 で 受付続けする
   以上です
 
+# Listens at 先 (a port, or 「host:port」) and gives each request and its connection to 処理 in a thread of its own.
 丙 を （HTTP内の要求 を 数 で 受け取って 甲 の 動作 を 返すこと） で 待受する は 乙 の 動作
 先 を 処理 で 待受する とは
   先 を 待受口開始してから 処理 で 受付続けする
 
 # --- クライアント ---
 
+# Used inside the library: the parts of a ws:// URL (host, port, path and the host part).
 宛先部 とは 主機 と 口番 と 道 と 主部 の 組
 
 # 「ws://主機:口番/道」を分ける(口番を省くと 80、道を省くと「/」)
@@ -307,6 +314,7 @@ url を 宛先分解する とは 主機 は （主 の 先頭） で 口番 は
 ただし 主 とは 主部 を 「:」 で 分割する
 ただし 口 とは もし 主 の 長さ < 2 ならば 80 そうでなければ 主 の 最後 を 数値にする
 
+# Connects to the ws:// URL, does the handshake and gives the peer.
 文字列 を 接続する は 相手 の 動作
 url を 接続する とは
   もし url が 「wss://」 で 先頭一致である ならば （「wss:// はまだ使えません(」 + url + 「)」） を 失敗する
