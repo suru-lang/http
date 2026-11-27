@@ -8,6 +8,7 @@
 # - `方法 で URL を 要求にする`, then `見出し追加する`, `本文設定する` and `送付する`: build a request and send it.
 # - `要求 を 初期 から 処理 で 逐次送付する`: give the response body to `処理` line by line as it arrives (streaming).
 # - `要求 を 開始送付する`, then `塊受信する` or `受信中止する`: read the status and headers first, then the body in chunks of bytes (large files or binary data).
+# - `要求 に 秒 を 接続期限設定する` and `要求 に 秒 を 待機時間設定する`: time limits for connecting and for each receive and send (「…(時間切れ)」).
 # - `要求 を 要求頭文にする`: the head of the request that would be sent (request line, headers and the blank line), for showing it as with `-v`.
 #
 # A response is a record of 状態 (such as 200), `見出し` (name and value pairs, names in lower case) and 本文 (a string).
@@ -21,8 +22,9 @@
 
 # A response: 状態 (such as 200), `見出し` (name and value pairs, names in lower case) and 本文 (a string).
 応答 とは 状態 と 見出し と 本文 の 組
-# A request: 方法 (such as 「GET」), 宛先 (the URL), `見出し` and 本文.
-要求 とは 方法 と 宛先 と 見出し と 本文 の 組
+# A request: 方法 (such as 「GET」), 宛先 (the URL), `見出し`, 本文, and the time limits in seconds (0 means no limit):
+# 接続期限 for connecting, and 待機時間 for each receive and send (the TLS handshake included).
+要求 とは 方法 と 宛先 と 見出し と 本文 と 接続期限 と 待機時間 の 組
 # Used inside the library: the parts of a URL (host, port, path, the host part, whether it is https, and the 「user:password」 part used for Basic authentication).
 宛先部 とは 主機 と 口番 と 道 と 主部 と 暗号 と 利用者 の 組
 # The head of a response: the status line as it came (「HTTP/1.1 200 OK」, without the newline), the status code, the headers with lower-cased names, and the headers as spelled by the server.
@@ -34,7 +36,15 @@
 
 # A request with the method 方法 to the URL 宛先, with no headers and an empty body. Send it with `送付する`.
 文字列 で 文字列 を 要求にする は 要求
-方法 で 宛先 を 要求にする とは 方法 は 方法 で 宛先 は 宛先 で 見出し は 空 で 本文 は （空 を バイト列組立する） の 要求
+方法 で 宛先 を 要求にする とは 方法 は 方法 で 宛先 は 宛先 で 見出し は 空 で 本文 は （空 を バイト列組立する） で 接続期限 は 0 で 待機時間 は 0 の 要求
+
+# The request 元 that gives up connecting after 秒 seconds (the runtime error 「…で通信に失敗しました(時間切れ)」).
+要求 に 数 を 接続期限設定する は 要求
+元 に 秒 を 接続期限設定する とは 接続期限 は 秒 の 元
+
+# The request 元 whose every receive and send (the TLS handshake too) gives up after 秒 seconds.
+要求 に 数 を 待機時間設定する は 要求
+元 に 秒 を 待機時間設定する とは 待機時間 は 秒 の 元
 
 # The request 元 with one more header, given as `名前 と 値`.
 要求 に 文字列 の リスト を 見出し追加する は 要求
@@ -118,10 +128,16 @@ url を 宛先検査する とは
 # Used inside the library: a plain connection (`平経路`) or a TLS one (`暗号経路`).
 経路 とは 番号 の 平経路 か 口 の 暗号経路
 
-宛先部 を 経路接続する は 経路 の 動作
-先 を 経路接続する とは
-  もし 先 の 暗号 ならば （先 の 主機 に 先 の 口番 で TLS内の暗号接続する） を （t を 受け取って （t の 暗号経路） を 返すこと） で 写像する
-  そうでなければ （先 の 主機 に 先 の 口番 で 通信内の接続する） を （n を 受け取って （n の 平経路） を 返すこと） で 写像する
+宛先部 を 要求 で 経路接続する は 経路 の 動作
+先 を r で 経路接続する とは
+  もし 先 の 暗号 ならば （先 の 主機 に 先 の 口番 で r の 接続期限 から r の 待機時間 を TLS内の期限付き暗号接続する） を （t を 受け取って （t の 暗号経路） を 返すこと） で 写像する
+  そうでなければ （先 を r で 平接続する） を （n を 受け取って （n の 平経路） を 返すこと） で 写像する
+
+宛先部 を 要求 で 平接続する は 数 の 動作
+先 を r で 平接続する とは 以下の手順です
+  n とは もし r の 接続期限 > 0 ならば 先 の 主機 に 先 の 口番 で r の 接続期限 を 通信内の期限付き接続した 結果 そうでなければ 先 の 主機 に 先 の 口番 で 通信内の接続した 結果
+  もし r の 待機時間 > 0 ならば n を r の 待機時間 で 通信内の待機時間設定する そうでなければ n を 結果にする
+  以上です
 
 経路 から 経路行受信する は 文字列 の 動作
 （n という 平経路） から 経路行受信する とは n から 通信内の行受信する
@@ -286,7 +302,7 @@ r を 接続開始する とは 以下の手順です
   r の 宛先 を 宛先検査する
   先 とは r の 宛先 を 宛先分解する
   文 とは r を 要求文にする
-  接続 とは 先 を 経路接続した 結果
+  接続 とは 先 を r で 経路接続した 結果
   （文 を 接続 へ 経路送信する） を （接続 を 経路切断する） で 失敗時切断する
   （r の 本文 を 接続 へ 経路バイト列送信する） を （接続 を 経路切断する） で 失敗時切断する
   接続 を 結果にする
@@ -492,4 +508,4 @@ r を 開始送付する とは 以下の手順です
   接続 から 新 を 処理 で 終端塊受信する
   以上です
 
-宛先分解する と 宛先検査する と 見出し行にする と 要求文にする と 見出し取得する と 見出し項目にする と 見出し受信する と 状態番号にする と 応答頭受信する と 転送方式にする と 塊長さにする と 十六進字値にする と 分割本文受信する と 塊受信続けする と 終端本文受信する と 本文受信する と 接続開始する と 行末除去する と 行群処理する と 分割逐次する と 塊逐次する と 終端逐次する と 一行逐次する と 逐次受信する と 方式別逐次する と 方法別本文受信する と 状態失敗する と 経路接続する と 経路行受信する と 経路受信する と 経路送信する と 経路切断する と 失敗時切断する と 失敗時処理する と 応答受信する と 頭後逐次する と 主機名にする と 口番にする と 口部分にする と 百分率戻する と 字番十六進にする と 基本認証値にする と 経路バイト列受信する と 経路バイト列送信する と 経路バイト列送信続けする と 項目名小文字にする と 既定残留判定する と 値有判定する と 小文字項目にする と 塊大 と 方法別塊受信する と 方式別塊受信する と 長さ塊受信する と 一塊受信する と 分割塊受信する と 分割一塊受信する と 終端塊受信する と 終端塊渡しする は 非公開とする
+宛先分解する と 宛先検査する と 見出し行にする と 要求文にする と 見出し取得する と 見出し項目にする と 見出し受信する と 状態番号にする と 応答頭受信する と 転送方式にする と 塊長さにする と 十六進字値にする と 分割本文受信する と 塊受信続けする と 終端本文受信する と 本文受信する と 接続開始する と 行末除去する と 行群処理する と 分割逐次する と 塊逐次する と 終端逐次する と 一行逐次する と 逐次受信する と 方式別逐次する と 方法別本文受信する と 状態失敗する と 経路接続する と 平接続する と 経路行受信する と 経路受信する と 経路送信する と 経路切断する と 失敗時切断する と 失敗時処理する と 応答受信する と 頭後逐次する と 主機名にする と 口番にする と 口部分にする と 百分率戻する と 字番十六進にする と 基本認証値にする と 経路バイト列受信する と 経路バイト列送信する と 経路バイト列送信続けする と 項目名小文字にする と 既定残留判定する と 値有判定する と 小文字項目にする と 塊大 と 方法別塊受信する と 方式別塊受信する と 長さ塊受信する と 一塊受信する と 分割塊受信する と 分割一塊受信する と 終端塊受信する と 終端塊渡しする は 非公開とする

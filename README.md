@@ -190,7 +190,7 @@ m を ws で 返答する とは 0 を 結果にする
 
 The page of [例/ブラウザチャット.suru](例/ブラウザチャット.suru) connects to the server over WebSocket to talk with the LLM.
 
-Suru must be a version with `ビット積にする`, `Base64符号化する`, 「ハッシュ」, `乱数バイト列取得する` and `通信内の待機時間設定する`.
+Suru must be a version with `ビット積にする`, `Base64符号化する`, 「ハッシュ」, `乱数バイト列取得する` `通信内の待機時間設定する`, `通信内の期限付き接続する` and `通信内の記述子取得する` (suru-lang/suru#236).
 
 ## Decisions
 
@@ -237,6 +237,7 @@ Suru must be a version with `ビット積にする`, `Base64符号化する`, �
 9. **The default headers can be replaced.** The client sends `Host`, `User-Agent: suru-http`, `Accept: */*`, `Connection: close`, `Authorization` (from the URL) and `Content-Length`. A header given with `見出し追加する` under the same name (ignoring case) replaces the default one, and a header whose value is 「」 is not sent (this removes a default). `Content-Length` is sent when the body is not empty, or for POST, PUT and PATCH.
 10. **Reading URLs.** Everything from `#` on is not sent. `user:password@` before the host becomes Basic authentication (`%XX` decoded). IPv6 addresses are written in brackets, as in `http://[::1]:8080/`. `http://host?a=1` is the path `/?a=1`.
 11. **Showing the request head.** `要求 を 要求頭文にする` gives the request line, the headers and the blank line exactly as they will be sent (the body follows as bytes), for things like curl's `-v`.
+12. **Time limits.** `要求 に 秒 を 接続期限設定する` gives up connecting after that many seconds, and `要求 に 秒 を 待機時間設定する` gives up any single receive or send (the TLS handshake included) that waits longer. `0`, the default, means no limit. Passing a limit is the runtime error 「…で通信に失敗しました(時間切れ)」. TLS now runs on a connection of 「通信」 (OpenSSL's `SSL_set_fd`), so https has the same limits; `TLS内の期限付き暗号接続する` takes both limits.
 
 ### WebSocket
 
