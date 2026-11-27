@@ -236,6 +236,7 @@ Suru must be a version with `ビット積にする`, `Base64符号化する`, �
 8. **The request body is bytes.** `要求` keeps its body as `バイト列`. `本文設定する` turns a string into UTF-8, and `要求 に バイト列 を バイト列本文設定する` puts bytes in as they are.
 9. **The default headers can be replaced.** The client sends `Host`, `User-Agent: suru-http`, `Accept: */*`, `Connection: close`, `Authorization` (from the URL) and `Content-Length`. A header given with `見出し追加する` under the same name (ignoring case) replaces the default one, and a header whose value is 「」 is not sent (this removes a default). `Content-Length` is sent when the body is not empty, or for POST, PUT and PATCH.
 10. **Reading URLs.** Everything from `#` on is not sent. `user:password@` before the host becomes Basic authentication (`%XX` decoded). IPv6 addresses are written in brackets, as in `http://[::1]:8080/`. `http://host?a=1` is the path `/?a=1`.
+11. **Showing the request head.** `要求 を 要求頭文にする` gives the request line, the headers and the blank line exactly as they will be sent (the body follows as bytes), for things like curl's `-v`.
 
 ### WebSocket
 
