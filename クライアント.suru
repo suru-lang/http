@@ -170,7 +170,7 @@ r を 要求文にする とは
 ただし 指定 とは r の 見出し から 値有判定すること で 選別する
 ただし 行一覧 とは （既定 + 指定） の それぞれ を 見出し行にする
 
-# 使う側が送るものを見せるため(本文はこの後にバイト列のまま送る)
+# The head of the request exactly as it will be sent: the request line, the headers and the blank line. The body follows as bytes. Use it to show the request, as curl -v does.
 要求 を 要求頭文にする は 文字列
 r を 要求頭文にする とは r を 要求文にする
 
