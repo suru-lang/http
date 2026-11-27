@@ -1,53 +1,50 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 sugarsweetrobotics(LICENSE)
-# 「する」の HTTP クライアント(HTTP/1.1 の一部。http:// と https://(TLS、OpenSSL)。1回ごとにつないで閉じます)
-# 使うファイルに 「HTTP/クライアント」 を 読み込む と書き、クライアント内の取得する のように「クライアント内の」を付けて使います。
+# An HTTP client for Suru (part of HTTP/1.1, http:// and https:// with TLS through OpenSSL). It connects and closes for each request.
+# Write `「HTTP/クライアント」 を 読み込む` in your file and use the names with the `クライアント内の` prefix, like `クライアント内の取得する`.
 #
-#   URL を 取得する                         … GET して 応答 を結果にする動作
-#   URL に 本文 を 投稿する                 … 本文(JSON の文字列)を POST して 応答 を結果にする動作
-#   方法 で URL を 要求にする               … 要求 を作る(見出し・本文は空)。要求 を 送付する で送る
-#   要求 に 名前 と 値 を 見出し追加する      … 見出しを1つ足した要求
-#   要求 に 本文 を 本文設定する            … 本文を入れた要求
-#   要求 に バイト列 を バイト列本文設定する  … 本文をバイト列のまま入れた要求
-#   要求 を 送付する                        … 要求を送って 応答 を結果にする動作
-#   要求 を 初期 から 処理 で 逐次送付する   … 応答の本文が届くたびに1行ずつ 処理 に渡す(ストリーミング)
-#   URL に 本文 を 初期 から 処理 で 逐次投稿する … POST して1行ずつ 処理 に渡す
-#   応答 から 名前 を 見出し値にする         … 見出しの値(大文字小文字を区別しない。なければ「」)
-#   応答 が 成功状態である                  … 状態が 200〜299 か
-#   要求 を 開始送付する                    … 送って応答の頭(状態行と見出し)まで読み、受信口 を結果にする動作
-#   受信口 を 初期 から 処理 で 塊受信する   … 本文をバイト列の塊で 処理 に渡し、閉じる(大きなファイルやバイナリ)
-#   受信口 を 受信中止する                  … 本文を読まずに閉じる
-#   要求 を 要求頭文にする                  … 送る要求の頭(要求行・見出し・空の行。-v などで見せる)
+# - `URL を 取得する`: GET, and give the response.
+# - `URL に 本文 を 投稿する`: POST the body (a JSON string), and give the response.
+# - `方法 で URL を 要求にする`, then `見出し追加する`, `本文設定する` and `送付する`: build a request and send it.
+# - `要求 を 初期 から 処理 で 逐次送付する`: give the response body to `処理` line by line as it arrives (streaming).
+# - `要求 を 開始送付する`, then `塊受信する` or `受信中止する`: read the status and headers first, then the body in chunks of bytes (large files or binary data).
+# - `要求 を 要求頭文にする`: the head of the request that would be sent (request line, headers and the blank line), for showing it as with `-v`.
 #
-# 応答は 状態(200 など)・見出し(名前 と 値 のリストのリスト。名前は小文字)・本文(文字列)の組です。
-# 逐次送付する の 処理 は （累 を 行 で 受け取って 新しい累 の 動作 を 返すこと）で、
-# 行は終わりの改行を除いた1行です(NDJSON の1件や、SSE の「data: …」の行)。最後に 累 を結果にします。
-# 状態が 200〜299 でなければ、本文を添えた実行時エラーになります。
-# つなげないときや、相手が途中で切れたときも実行時エラーです(試行する で受け止められます)。
+# A response is a record of 状態 (such as 200), `見出し` (name and value pairs, names in lower case) and 本文 (a string).
+# The `処理` of `逐次送付する` is `（累 を 行 で 受け取って 新しい累 の 動作 を 返すこと）`. A line has no newline at the end (one item of NDJSON, or an SSE 「data: …」 line). At the end the accumulator is the result.
+# A status outside 200 to 299 is a runtime error with the body in its message.
+# Failing to connect, or the other side cutting the connection, is a runtime error too (`試行する` can catch it).
 
 「標準」 を 読み込んで 使う
 「通信」 を 読み込む
 「TLS」 を 読み込む
 
+# A response: 状態 (such as 200), `見出し` (name and value pairs, names in lower case) and 本文 (a string).
 応答 とは 状態 と 見出し と 本文 の 組
+# A request: 方法 (such as 「GET」), 宛先 (the URL), `見出し` and 本文.
 要求 とは 方法 と 宛先 と 見出し と 本文 の 組
+# Used inside the library: the parts of a URL (host, port, path, the host part, whether it is https, and the 「user:password」 part used for Basic authentication).
 宛先部 とは 主機 と 口番 と 道 と 主部 と 暗号 と 利用者 の 組
-# 状態行は「HTTP/1.1 200 OK」のまま(終わりの改行なし)。見出しは名前を小文字にしたもの、元見出しは届いた綴りのまま
+# The head of a response: the status line as it came (「HTTP/1.1 200 OK」, without the newline), the status code, the headers with lower-cased names, and the headers as spelled by the server.
 応答頭 とは 状態行 と 状態 と 見出し と 元見出し の 組
-# 頭まで読んだ接続。本文は 塊受信する で読むか、受信中止する で捨てる
+# A connection read up to the end of the response head. Read the body with `塊受信する`, or drop it with `受信中止する`.
 受信口 とは 路 と 頭 と 方法 の 組
 
 # --- 要求を作る ---
 
+# A request with the method 方法 to the URL 宛先, with no headers and an empty body. Send it with `送付する`.
 文字列 で 文字列 を 要求にする は 要求
 方法 で 宛先 を 要求にする とは 方法 は 方法 で 宛先 は 宛先 で 見出し は 空 で 本文 は （空 を バイト列組立する） の 要求
 
+# The request 元 with one more header, given as `名前 と 値`.
 要求 に 文字列 の リスト を 見出し追加する は 要求
 元 に 名前 と 値 を 見出し追加する とは 見出し は （元 の 見出し + （（名前 と 値） を 空 に 挿入する）） の 元
 
+# The request 元 with the body 本文.
 要求 に 文字列 を 本文設定する は 要求
 元 に 本文 を 本文設定する とは 本文 は （本文 を バイト列にする） の 元
 
+# The request 元 with the bytes 本文 as its body.
 要求 に バイト列 を バイト列本文設定する は 要求
 元 に 本文 を バイト列本文設定する とは 本文 は 本文 の 元
 
@@ -118,6 +115,7 @@ url を 宛先検査する とは
 
 # --- 経路: http は通信の接続、https は TLS の接続 ---
 
+# Used inside the library: a plain connection (`平経路`) or a TLS one (`暗号経路`).
 経路 とは 番号 の 平経路 か 口 の 暗号経路
 
 宛先部 を 経路接続する は 経路 の 動作
@@ -192,9 +190,11 @@ r を 要求頭文にする とは r を 要求文にする
 先頭 は 項目 で 残り は 他 から 名前 を 見出し取得する とは
   もし 項目 の 先頭 が 名前 ならば 項目 の 最後 そうでなければ 他 から 名前 を 見出し取得する
 
+# The value of the header 名前 of the response, ignoring case (「」 when there is none).
 応答 から 文字列 を 見出し値にする は 文字列
 r から 名前 を 見出し値にする とは r の 見出し から （名前 を 小文字にする） を 見出し取得する
 
+# 真 if the status is from 200 to 299.
 応答 が 成功状態である は 真偽
 r が 成功状態である とは r の 状態 >= 200 かつ r の 状態 < 300
 
@@ -306,6 +306,7 @@ m を 切断 で 失敗時切断する とは 以下の手順です
   e を 失敗する
   以上です
 
+# Sends the request and gives the response.
 要求 を 送付する は 応答 の 動作
 r を 送付する とは 以下の手順です
   接続 とは r を 接続開始した 結果
@@ -321,12 +322,15 @@ r を 送付する とは 以下の手順です
   （状態 は 頭 の 状態 で 見出し は 頭 の 見出し で 本文 は 本文 の 応答） を 結果にする
   以上です
 
+# GETs the URL and gives the response.
 文字列 を 取得する は 応答 の 動作
 url を 取得する とは 「GET」 で url を 要求にして 送付する
 
+# POSTs 本文 (a JSON string) to the URL and gives the response.
 文字列 に 文字列 を 投稿する は 応答 の 動作
 url に 本文 を 投稿する とは url に 本文 を JSON要求にして 送付する
 
+# A POST request to the URL with 本文 and the Content-Type application/json.
 文字列 に 文字列 を JSON要求にする は 要求
 url に 本文 を JSON要求にする とは
   （（「POST」 で url を 要求にする） に 「Content-Type」 と 「application/json」 を 見出し追加する） に 本文 を 本文設定する
@@ -377,6 +381,7 @@ s を 行末除去する とは
   接続 に 新累 を 処理 で 終端逐次する
   以上です
 
+# Sends the request and gives each line of the response body to 処理 as it arrives, starting from 初期. The result is the last accumulator.
 要求 を 甲 から （甲 を 文字列 で 受け取って 甲 の 動作 を 返すこと） で 逐次送付する は 甲 の 動作
 r を 初期 から 処理 で 逐次送付する とは 以下の手順です
   接続 とは r を 接続開始した 結果
@@ -407,6 +412,7 @@ r を 初期 から 処理 で 逐次送付する とは 以下の手順です
   （「HTTP の状態が 」 + （頭 の 状態 を 文字列化する） + 「 でした: 」 + 本文） を 失敗する
   以上です
 
+# POSTs 本文 to the URL and gives each line of the response body to 処理, like `逐次送付する`.
 文字列 に 文字列 を 甲 から （甲 を 文字列 で 受け取って 甲 の 動作 を 返すこと） で 逐次投稿する は 甲 の 動作
 url に 本文 を 初期 から 処理 で 逐次投稿する とは （url に 本文 を JSON要求にする） を 初期 から 処理 で 逐次送付する
 
@@ -415,6 +421,7 @@ url に 本文 を 初期 から 処理 で 逐次投稿する とは （url に
 
 塊大 とは 65536
 
+# Sends the request and reads the response up to the end of its head. Read the body from the result.
 要求 を 開始送付する は 受信口 の 動作
 r を 開始送付する とは 以下の手順です
   接続 とは r を 接続開始した 結果
@@ -422,10 +429,11 @@ r を 開始送付する とは 以下の手順です
   （路 は 接続 で 頭 は 頭 で 方法 は r の 方法 の 受信口） を 結果にする
   以上です
 
+# Closes the connection without reading the body.
 受信口 を 受信中止する は 数 の 動作
 受 を 受信中止する とは 受 の 路 を 経路切断する
 
-# 処理 は （累 を 塊 で 受け取って 新しい累 の 動作 を 返すこと）。塊は空でないバイト列。最後に閉じて 累 を結果にする
+# Gives the body to 処理 in chunks of bytes (never empty), starting from 初期, then closes. 処理 is `（累 を 塊 で 受け取って 新しい累 の 動作 を 返すこと）`, and the result is the last accumulator.
 受信口 を 甲 から （甲 を バイト列 で 受け取って 甲 の 動作 を 返すこと） で 塊受信する は 甲 の 動作
 受 を 初期 から 処理 で 塊受信する とは 以下の手順です
   累 とは （受 を 初期 から 処理 で 方法別塊受信する） を （受 の 路 を 経路切断する） で 失敗時切断した 結果

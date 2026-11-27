@@ -266,6 +266,17 @@ Suru must be a version with `ビット積にする`, `Base64符号化する`, �
 2. **Strings are split at the last 「:」.** The front is the address, the back the port. Names like `「localhost:8080」` and bracketed IPv6 like `「[::1]:8080」` can be written (the brackets are removed before passing to the core's `ポート を アドレス に 通信内の待受開始する`). Leaving out the address, as in `「:8080」`, gives 0.0.0.0. Without 「:」 it is the failure 「待ち受ける先は 127.0.0.1:8080 のように アドレス:ポート で書いてください(…)」 ("write where to listen as ADDRESS:PORT, like 127.0.0.1:8080").
 3. **`先 を 待受口開始する` only opens the listener.** It is the trait function used by the listening functions, an action giving the listener number. Being a trait function, it is written without 「HTTP内の」. It needs Suru 0.2.0 or later (`待受開始する` accepting an address).
 
+## API documentation
+
+The API documentation is made from the comments in `HTTP.suru`, `TLS.suru`, `WebSocket.suru`, `クライアント.suru`: the head comment of the file and the comment right above each public definition, written in English. It is published at https://http.readthedocs.io/en/latest/.
+
+```sh
+kumu 文書                                                            # writes docs/api/HTTP.md docs/api/TLS.md docs/api/WebSocket.md docs/api/クライアント.md
+pip install -r docs/requirements.txt && sphinx-build docs docs/_build   # HTML in docs/_build
+```
+
+`docs/` and `.readthedocs.yaml` were written by `kumu 文書 --雛形` (Suru 0.11.0 or later). On every build, Read the Docs downloads kumu 0.11.0, runs `kumu 文書 --出力 docs/api` and then Sphinx, so the generated pages are not committed. The editor hover shows the same descriptions.
+
 ## Tests
 
 ```sh
