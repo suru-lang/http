@@ -8,6 +8,7 @@
 # - `方法 で URL を 要求にする`, then `見出し追加する`, `本文設定する` and `送付する`: build a request and send it.
 # - `要求 を 初期 から 処理 で 逐次送付する`: give the response body to `処理` line by line as it arrives (streaming).
 # - `要求 を 開始送付する`, then `塊受信する` or `受信中止する`: read the status and headers first, then the body in chunks of bytes (large files or binary data).
+# - `要求 を 要求頭文にする`: the head of the request that would be sent (request line, headers and the blank line), for showing it as with `-v`.
 #
 # A response is a record of 状態 (such as 200), `見出し` (name and value pairs, names in lower case) and 本文 (a string).
 # The `処理` of `逐次送付する` is `（累 を 行 で 受け取って 新しい累 の 動作 を 返すこと）`. A line has no newline at the end (one item of NDJSON, or an SSE 「data: …」 line). At the end the accumulator is the result.
@@ -168,6 +169,10 @@ r を 要求文にする とは
 ただし 既定 とは （基本 + 認証 + 長さ見出し） から （指定名 で 既定残留判定すること） で 選別する
 ただし 指定 とは r の 見出し から 値有判定すること で 選別する
 ただし 行一覧 とは （既定 + 指定） の それぞれ を 見出し行にする
+
+# The head of the request exactly as it will be sent: the request line, the headers and the blank line. The body follows as bytes. Use it to show the request, as curl -v does.
+要求 を 要求頭文にする は 文字列
+r を 要求頭文にする とは r を 要求文にする
 
 文字列 の リスト を 項目名小文字にする は 文字列
 項目 を 項目名小文字にする とは 項目 の 先頭 を 小文字にする
