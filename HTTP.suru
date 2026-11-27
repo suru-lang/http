@@ -1,57 +1,63 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 sugarsweetrobotics(LICENSE)
-# 「する」の HTTP サーバー(HTTP/1.1 の一部。答えたら接続を閉じます)
-# kumu 追加 github.com/suru-lang/http で足し、使うファイルに 「HTTP」 を 読み込む と書いて、
-# HTTP内の待受する のように「HTTP内の」を付けて使います。
+# An HTTP server for Suru (part of HTTP/1.1; the connection is closed after each answer).
+# Add it with `kumu 追加 github.com/suru-lang/http`, write `「HTTP」 を 読み込む` in your file and use the names with the `HTTP内の` prefix, like `HTTP内の待受する`.
 #
-#   要求 を 案内する とは …                      … 要求を受け取って応答を返す関数を書く
-#   8080 を 案内すること で HTTP内の待受する     … 8080 番で待ち受けて、要求ごとに 案内する を呼ぶ
-#   8080 を 記録すること で HTTP内の動作待受する … 関数が応答の動作を返すとき(表示やファイルを使う)
-#   8080 を 案内すること で HTTP内の並行待受する … 同時接続数(16)のスレッドで並行に答える(遅い相手がいてもほかを待たせない)
-#   8080 を 記録すること で HTTP内の動作並行待受する
-#   8080 を 中継すること で HTTP内の直接並行待受する … 関数が 要求 と 接続 を受け取り、応答を自分で送る(少しずつ送るとき)
-#   「127.0.0.1:8080」 を 案内すること で HTTP内の待受する … 同じ機械の中からだけ受け付ける(数のポートなら 0.0.0.0。どの待受する にも使える)
+# - `要求 を 案内する とは …`: write a function that takes a request and returns a response.
+# - `8080 を 案内すること で HTTP内の待受する`: listen on port 8080 and call `案内する` for each request.
+# - `8080 を 記録すること で HTTP内の動作待受する`: the same, when the function returns an action that gives the response (to print or use files).
+# - `8080 を 案内すること で HTTP内の並行待受する`: answer in parallel with `同時接続数` (16) threads, so a slow client does not keep the others waiting. `HTTP内の動作並行待受する` is the action version.
+# - `8080 を 中継すること で HTTP内の直接並行待受する`: the function gets the request and the connection and sends the response itself (to send it bit by bit).
+# - `「127.0.0.1:8080」 を 案内すること で HTTP内の待受する`: accept only from the same machine (a number means 0.0.0.0). Every listening function takes this.
+# - `8080 を （「public」 を HTTP内の配信すること） で HTTP内の動作待受する`: serve the files under the folder public.
+# - `「/static」 から 「public」 を 要求 で HTTP内の前置付配信する`: serve only /static/… from public.
 #
-#   8080 を （「public」 を HTTP内の配信すること） で HTTP内の動作待受する … フォルダ public の下のファイルを配る
-#   「/static」 から 「public」 を 要求 で HTTP内の前置付配信する      … /static/… だけを public から配る
-#
-# 要求は 方法(「GET」など)・道(「/a?b=1」)・見出し・本文 の組、応答は 状態・見出し・本文 の組です。
-# 見出しは 名前 と 値 のリストのリストで、要求の見出しの名前は小文字にそろえます。
-# 応答の本文はバイト列です(ここの関数は文字列を UTF-8 のバイト列にして入れます。手で作る応答は文字列でも送れます)。
-# HEAD の要求には、見出し(Content-Length は本文の長さ)だけを送ります。
+# A request is a record of 方法 (such as 「GET」), 道 (「/a?b=1」), `見出し` and 本文. A response is a record of 状態, `見出し` and 本文.
+# Headers are a list of name and value pairs. The header names of a request are lower-cased.
+# The body of a response is a byte sequence (the functions here turn strings into UTF-8 bytes; a response made by hand can have a string body too).
+# A HEAD request gets only the headers (Content-Length is the length of the body).
 
 「標準」 を 読み込んで 使う
 「通信」 を 読み込む
 「スレッド」 を 読み込む
 「ファイル」 を 読み込む
 
+# A request: 方法 (such as 「GET」), 道 (such as 「/a?b=1」), `見出し` (name and value pairs, names in lower case) and 本文.
 要求 とは 方法 と 道 と 見出し と 本文 の 組
+# A response: 状態 (such as 200), `見出し` (name and value pairs) and 本文.
 応答 とは 状態 と 見出し と 本文 の 組
 
 # --- 応答を作る ---
 
+# A response with the status code 状態 and the body 本文 (text/plain).
 数 で 文字列 を 状態応答する は 応答
 状態 で 本文 を 状態応答する とは
   状態 は 状態 で 見出し は （（「Content-Type」 と 「text/plain; charset=utf-8」） を 空 に 挿入する） で 本文 は （本文 を バイト列にする） の 応答
 
+# A 200 response with the body 本文 (text/plain).
 文字列 を 本文応答する は 応答
 本文 を 本文応答する とは 200 で 本文 を 状態応答する
 
+# A 200 response with the bytes 本文 and the Content-Type 種類.
 バイト列 を 文字列 で 種類付応答する は 応答
 本文 を 種類 で 種類付応答する とは
   状態 は 200 で 見出し は （（「Content-Type」 と 種類） を 空 に 挿入する） で 本文 は 本文 の 応答
 
+# A 301 response that redirects to 行先 (the Location header).
 文字列 を 転送応答する は 応答
 行先 を 転送応答する とは
   （301 で 「Moved Permanently」 を 状態応答する） に 「Location」 と 行先 を 見出し追加する
 
+# A 200 response with the HTML 本文 (text/html).
 文字列 を HTML応答する は 応答
 本文 を HTML応答する とは
   状態 は 200 で 見出し は （（「Content-Type」 と 「text/html; charset=utf-8」） を 空 に 挿入する） で 本文 は （本文 を バイト列にする） の 応答
 
+# The response 元 with one more header, given as `名前 と 値`.
 応答 に 文字列 の リスト を 見出し追加する は 応答
 元 に 名前 と 値 を 見出し追加する とは 見出し は （（名前 と 値） を 元 の 見出し に 追加する） の 元
 
+# The reason phrase of a status code, like 「Not Found」 for 404.
 数 を 状態名にする は 文字列
 200 を 状態名にする とは 「OK」
 201 を 状態名にする とは 「Created」
@@ -67,10 +73,11 @@
 500 を 状態名にする とは 「Internal Server Error」
 状態 を 状態名にする とは 「Unknown」
 
+# One header line, 「名前: 値」 with CRLF, from a name and value pair.
 文字列 の リスト を 見出し行にする は 文字列
 項目 を 見出し行にする とは （項目 の 先頭） + 「: 」 + （項目 の 最後） + 復帰改行
 
-# 本文は文字列かバイト列
+# What a response body can be: a string or a byte sequence.
 本文可能 という 性質 とは
   本文 を 本文長計測する
   本文 を 接続 へ 本文送信する
@@ -86,6 +93,7 @@
   b を 接続 へ 本文送信する とは b を 接続 へ 通信内のバイト列送信する
   b を 本文文字列化する とは b を 文字列にする
 
+# The status line and the header lines of the response, ending with an empty line.
 応答 を 見出し部分にする は 文字列
 応答 を 見出し部分にする とは
   最初 + （行一覧 を 「」 で 結合する） + 復帰改行
@@ -94,10 +102,11 @@
 ただし 接続行 とは （「Connection」 と 「close」）
 ただし 行一覧 とは （応答 の 見出し + （長さ と 接続行）） の それぞれ を 見出し行にする
 
+# The whole response as text: the headers and the body.
 応答 を 応答文にする は 文字列
 応答 を 応答文にする とは （応答 を 見出し部分にする） + （応答 の 本文 を 本文文字列化する）
 
-# HEAD の要求には見出しだけを送る
+# Sends the response on the connection. For a HEAD request (方法 is 「HEAD」) only the headers are sent.
 応答 を 数 へ 文字列 で 応答送信する は 数 の 動作
 応答 を 接続 へ 方法 で 応答送信する とは 以下の手順です
   （応答 を 見出し部分にする） を 接続 へ 通信内の送信する
@@ -106,14 +115,17 @@
 
 # --- 要求を読む ---
 
+# The value of the header 名前 in a list of headers (「」 when there is none).
 文字列 の リスト の リスト から 文字列 を 見出し取得する は 文字列
 空 から 名前 を 見出し取得する とは 「」
 先頭 は 項目 で 残り は 他 から 名前 を 見出し取得する とは
   もし 項目 の 先頭 が 名前 ならば 項目 の 最後 そうでなければ 他 から 名前 を 見出し取得する
 
+# The value of the header 名前 of the request (「」 when there is none). Write the name in lower case.
 要求 から 文字列 を 見出し値にする は 文字列
 要求 から 名前 を 見出し値にする とは 要求 の 見出し から （名前 を 小文字にする） を 見出し取得する
 
+# A header line split into the lower-cased name and the value.
 文字列 を 見出し項目にする は 文字列 の リスト
 行 を 見出し項目にする とは
   （名前 を 空白除去して 小文字にする） と （後半 を 「:」 で 結合して 空白除去する）
@@ -121,19 +133,23 @@
 ただし 名前 とは 部分 の 先頭
 ただし 後半 とは 部分 の 残り
 
+# Reads the header lines from the connection, up to the empty line.
 数 から 見出し受信する は 文字列 の リスト の リスト の 動作
 接続 から 見出し受信する とは 以下の手順です
   行 とは 接続 から 通信内の行受信した 結果 を 空白除去する
   もし 行 が 「」 ならば 空 を 結果にする そうでなければ （行 を 見出し項目にする） を （接続 から 見出し受信する） の 結果 に 挿入する
   以上です
 
+# The n-th string of the list, or 「」 when the list is shorter.
 文字列 の リスト から 数 を 部分取得する は 文字列
 xs から n を 部分取得する とは もし xs の 長さ < n ならば 「」 そうでなければ xs から n を 番目取得する
 
+# The number in a Content-Length value (0 for 「」).
 文字列 を 長さにする は 数
 「」 を 長さにする とは 0
 s を 長さにする とは s を 数値にする
 
+# Reads one request (the request line, the headers and the body) from the connection.
 数 から 要求受信する は 要求 の 動作
 接続 から 要求受信する とは 以下の手順です
   部分 とは 接続 から 通信内の行受信した 結果 を 空白除去して 「 」 で 分割する
@@ -150,8 +166,10 @@ s を 長さにする とは s を 数値にする
 #   フォルダを指す道は、/ で終わっていなければ / を足した道へ 301、終わっていれば index.html(一覧は出さない)
 #   Content-Type は拡張子から MIME表 で決める(分からなければ application/octet-stream)
 
+# The table of file extensions and their Content-Type, used by `種類判定する`.
 MIME表 とは （「html」 と 「text/html; charset=utf-8」） と （「htm」 と 「text/html; charset=utf-8」） と （「css」 と 「text/css; charset=utf-8」） と （「js」 と 「text/javascript; charset=utf-8」） と （「mjs」 と 「text/javascript; charset=utf-8」） と （「json」 と 「application/json; charset=utf-8」） と （「txt」 と 「text/plain; charset=utf-8」） と （「md」 と 「text/markdown; charset=utf-8」） と （「csv」 と 「text/csv; charset=utf-8」） と （「xml」 と 「application/xml; charset=utf-8」） と （「svg」 と 「image/svg+xml; charset=utf-8」） と （「png」 と 「image/png」） と （「jpg」 と 「image/jpeg」） と （「jpeg」 と 「image/jpeg」） と （「gif」 と 「image/gif」） と （「webp」 と 「image/webp」） と （「avif」 と 「image/avif」） と （「ico」 と 「image/x-icon」） と （「wasm」 と 「application/wasm」） と （「pdf」 と 「application/pdf」） と （「woff」 と 「font/woff」） と （「woff2」 と 「font/woff2」） と （「ttf」 と 「font/ttf」） と （「otf」 と 「font/otf」） と （「mp3」 と 「audio/mpeg」） と （「mp4」 と 「video/mp4」） と （「webm」 と 「video/webm」） と （「zip」 と 「application/zip」）
 
+# The Content-Type for the path, from its extension (「application/octet-stream」 when unknown).
 文字列 を 種類判定する は 文字列
 道 を 種類判定する とは もし 種類 = 「」 ならば 「application/octet-stream」 そうでなければ 種類
 ただし 名前 とは （道 を 「/」 で 分割する） の 最後
@@ -182,10 +200,11 @@ c を 十六進値にする とは
 数 の リスト を 文字列組立する は 文字列
 xs を 文字列組立する とは xs を バイト列組立して 文字列にする
 
+# The path with its percent-encoding decoded, as UTF-8. A failure when the bytes are not UTF-8.
 文字列 を 道復号する は （文字列 と 文字列） の 成否
 s を 道復号する とは （（s を バイト列にして 数列にして 百分率復号した 中身） を 文字列組立すること） を 試算する
 
-# 道から ? と # の後ろを除く
+# The path without the part after 「?」 or 「#」.
 文字列 を 道部分にする は 文字列
 道 を 道部分にする とは （（道 を 「?」 で 分割する） の 先頭 を 「#」 で 分割する） の 先頭
 
@@ -203,10 +222,11 @@ x が 中身有である とは x ≠ 「」
 方法違い とは （405 で 「Method Not Allowed」 を 状態応答する） に 「Allow」 と 「GET, HEAD」 を 見出し追加する
 不正要求 とは 400 で 「Bad Request」 を 状態応答する
 
+# Serves the file under フォルダ that the request's path points to, for GET and HEAD. A folder gives its index.html. 404 when there is no such file (or it is hidden, starting with 「.」), 403 for a path that leaves the folder, 405 for other methods.
 文字列 を 要求 で 配信する は 応答 の 動作
 フォルダ を 要求 で 配信する とは 「」 から フォルダ を 要求 で 前置付配信する
 
-# 前置き(「/static」など)で始まる道だけを、その後ろをフォルダの中の道として配る。始まらなければ 404
+# Serves only the paths that start with `前置き` (such as 「/static」), reading the rest of the path under フォルダ. 404 for other paths.
 文字列 から 文字列 を 要求 で 前置付配信する は 応答 の 動作
 前置き から フォルダ を 要求 で 前置付配信する とは
   もし 要求 の 方法 ≠ 「GET」 かつ 要求 の 方法 ≠ 「HEAD」 ならば 方法違い を 結果にする
@@ -263,12 +283,14 @@ r から x を 置場判定する とは 「無」
 # 1件ごとに 試行する で囲み、途中で失敗したら(関数のエラー、壊れた要求、相手が切れたなど)
 # エラーの文を標準エラーに書いて、500 を返せれば返し、接続を閉じて次の要求を待ちます。
 
+# Sends a 500 response on the connection, ignoring errors.
 数 を 失敗答えする は 数 の 動作
 接続 を 失敗答えする とは 以下の手順です
   （500 で 「Internal Server Error」 を 状態応答して 応答文にして 接続 へ 通信内の送信する） を （0 を 結果にする） で 試行する
   （接続 を 通信内の切断する） を （0 を 結果にする） で 試行する
   以上です
 
+# Reads one request from the connection, answers it with 処理 and closes the connection.
 数 を （要求 を 受け取って 応答 を 返すこと） で 一件答えする は 数 の 動作
 接続 を 処理 で 一件答えする とは 以下の手順です
   要求 とは 接続 から 要求受信した 結果
@@ -276,6 +298,7 @@ r から x を 置場判定する とは 「無」
   接続 を 通信内の切断する
   以上です
 
+# Like `一件答えする`, when 処理 returns an action that gives the response.
 数 を （要求 を 受け取って 甲 を 返すこと） で 動作一件答えする は 乙 の 動作
 接続 を 処理 で 動作一件答えする とは 以下の手順です
   要求 とは 接続 から 要求受信した 結果
@@ -284,6 +307,7 @@ r から x を 置場判定する とは 「無」
   接続 を 通信内の切断する
   以上です
 
+# Accepts connections on the listening socket 口 one by one and answers each with 処理, forever.
 数 を （要求 を 受け取って 応答 を 返すこと） で 受付続けする は 甲 の 動作
 口 を 処理 で 受付続けする とは 以下の手順です
   接続 とは 口 から 通信内の接続受付した 結果
@@ -291,6 +315,7 @@ r から x を 置場判定する とは 「無」
   口 を 処理 で 受付続けする
   以上です
 
+# Like `受付続けする`, when 処理 returns an action that gives the response.
 数 を （要求 を 受け取って 甲 を 返すこと） で 動作受付続けする は 乙 の 動作
 口 を 処理 で 動作受付続けする とは 以下の手順です
   接続 とは 口 から 通信内の接続受付した 結果
@@ -307,6 +332,7 @@ r から x を 置場判定する とは 「無」
 # 先 を 待受口開始する は、その先で待ち受けた待受口の番号を結果にする動作です(通信内の待受開始する と同じ)。
 # 性質の関数なので、「HTTP内の」を付けずに使います。
 
+# Where to listen: a port number, or a string such as 「127.0.0.1:8080」.
 待受先 という 性質 とは
   先 を 待受口開始する
 
@@ -323,10 +349,12 @@ s を 文字列待受開始する とは もし 部分 の 長さ < 2 ならば 
 ただし ポート とは 部分 の 最後 を 数値にする
 ただし 主機 とは （部分 から （部分 の 長さ - 1） を 先頭取得して 「:」 で 結合する） を 「[」 から 「」 へ 置換して 「]」 から 「」 へ 置換する
 
+# Listens at 先 (a port, or 「host:port」) and answers each request with 処理, one at a time. It does not return.
 丙 を （要求 を 受け取って 応答 を 返すこと） で 待受する は 甲 の 動作
 先 を 処理 で 待受する とは
   先 を 待受口開始してから 処理 で 受付続けする
 
+# Like `待受する`, when 処理 returns an action that gives the response.
 丙 を （要求 を 受け取って 甲 を 返すこと） で 動作待受する は 乙 の 動作
 先 を 処理 で 動作待受する とは
   先 を 待受口開始してから 処理 で 動作受付続けする
@@ -335,6 +363,7 @@ s を 文字列待受開始する とは もし 部分 の 長さ < 2 ならば 
 # 受け付けた接続を通路で 同時接続数 個のスレッドに渡し、それぞれのスレッドが1件ずつ答えます。
 # 遅い相手や時間のかかる要求があっても、ほかの要求を待たせません。
 
+# The number of threads that `並行待受する` uses (16).
 同時接続数 とは 16
 
 数 を （要求 を 受け取って 応答 を 返すこと） で 試行答えする は 数 の 動作
@@ -367,9 +396,11 @@ n に 担当 を 担当者一人開始する とは 以下の手順です
   通路 へ 口 を 接続渡し続けする
   以上です
 
+# Like `待受する`, but answers up to `同時接続数` requests at the same time.
 丙 を （要求 を 受け取って 応答 を 返すこと） で 並行待受する は 甲 の 動作
 先 を 処理 で 並行待受する とは 先 を （処理 で 試行答えすること） で 担当者付待受する
 
+# Like `並行待受する`, when 処理 returns an action that gives the response.
 丙 を （要求 を 受け取って 甲 を 返すこと） で 動作並行待受する は 乙 の 動作
 先 を 処理 で 動作並行待受する とは 先 を （処理 で 動作試行答えすること） で 担当者付待受する
 
@@ -385,17 +416,19 @@ n を 十六進文字列にする とは もし n < 16 ならば n を 十六進
 数 を 十六進字にする は 文字列
 n を 十六進字にする とは 「0123456789abcdef」 から n + 1 を 番目取得する
 
+# Starts a chunked 200 response with the Content-Type 種類 on the connection.
 数 へ 文字列 で 逐次開始する は 数 の 動作
 接続 へ 種類 で 逐次開始する とは
   「HTTP/1.1 200 OK」 + 復帰改行 + （行一覧 を 「」 で 結合する） + 復帰改行 を 接続 へ 通信内の送信する
 ただし 行一覧 とは （（「Content-Type」 と 種類） と （「Cache-Control」 と 「no-cache」） と （「Transfer-Encoding」 と 「chunked」） と （「Connection」 と 「close」）） の それぞれ を 見出し行にする
 
-# 空の文字列は送らない(chunked では長さ 0 の塊が終わりの印のため)
+# Sends s as one chunk. An empty string is not sent, because a chunk of length 0 marks the end.
 文字列 を 数 へ 逐次送信する は 数 の 動作
 s を 接続 へ 逐次送信する とは
   もし s = 「」 ならば 0 を 結果にする
   そうでなければ （s を バイト数にして 十六進文字列にする） + 復帰改行 + s + 復帰改行 を 接続 へ 通信内の送信する
 
+# Ends a chunked response (sends the last, empty chunk).
 数 へ 逐次終了する は 数 の 動作
 接続 へ 逐次終了する とは 「0」 + 復帰改行 + 復帰改行 を 接続 へ 通信内の送信する
 
@@ -416,10 +449,12 @@ s を 接続 へ 逐次送信する とは
   口 を 処理 で 直接受付続けする
   以上です
 
+# Listens at 先 and gives each request and its connection to 処理, which sends the response itself. Connections are handled one at a time.
 丙 を （要求 を 数 で 受け取って 甲 の 動作 を 返すこと） で 直接待受する は 乙 の 動作
 先 を 処理 で 直接待受する とは
   先 を 待受口開始してから 処理 で 直接受付続けする
 
+# Like `直接待受する`, but with at most `同時接続数` connections handled at the same time.
 丙 を （要求 を 数 で 受け取って 甲 の 動作 を 返すこと） で 直接並行待受する は 乙 の 動作
 先 を 処理 で 直接並行待受する とは 先 を （処理 で 直接試行答えすること） で 担当者付待受する
 
