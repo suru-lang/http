@@ -265,7 +265,7 @@ m を ws で 返答する とは 0 を 結果にする
 
 ## API ドキュメント
 
-API ドキュメントは `HTTP.suru`、`TLS.suru`、`WebSocket.suru`、`クライアント.suru` の注釈から作ります。ファイルの頭の注釈と、公開の定義のすぐ上の注釈で、英語で書いています。公開先は https://suru-lang-http.readthedocs.io/en/latest/ です。
+API ドキュメントは `HTTP.suru`、`TLS.suru`、`WebSocket.suru`、`クライアント.suru` の注釈から作ります。ファイルの頭の注釈と、公開の定義のすぐ上の注釈で、英語で書いています。公開先は https://http.readthedocs.io/en/latest/ です。
 
 ```sh
 kumu 文書                                                            # docs/api/HTTP.md docs/api/TLS.md docs/api/WebSocket.md docs/api/クライアント.md を書く

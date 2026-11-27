@@ -267,7 +267,7 @@ Suru must be a version with `ビット積にする`, `Base64符号化する`, �
 
 ## API documentation
 
-The API documentation is made from the comments in `HTTP.suru`, `TLS.suru`, `WebSocket.suru`, `クライアント.suru`: the head comment of the file and the comment right above each public definition, written in English. It is published at https://suru-lang-http.readthedocs.io/en/latest/.
+The API documentation is made from the comments in `HTTP.suru`, `TLS.suru`, `WebSocket.suru`, `クライアント.suru`: the head comment of the file and the comment right above each public definition, written in English. It is published at https://http.readthedocs.io/en/latest/.
 
 ```sh
 kumu 文書                                                            # writes docs/api/HTTP.md docs/api/TLS.md docs/api/WebSocket.md docs/api/クライアント.md
