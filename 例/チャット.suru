@@ -28,7 +28,9 @@ m を 発言JSONにする とは
 
 設定 で 発言 の リスト を 要求本文にする は 文字列 を 返す
 s で 履歴 を 要求本文にする とは
-  （（「model」 と （s の モデル の JSON文字列） の JSON項目） と （「messages」 と （（履歴 の それぞれ を 発言JSONにする） の JSON配列） の JSON項目） と （「stream」 と （真 の JSON真偽） の JSON項目）） の JSON物 を JSON文字列にする
+  （（「model」 と （s の モデル の JSON文字列） の JSON項目） と
+    （「messages」 と （（履歴 の それぞれ を 発言JSONにする） の JSON配列） の JSON項目） と
+    （「stream」 と （真 の JSON真偽） の JSON項目）） の JSON物 を JSON文字列にする
 
 設定 を 宛先にする は 文字列 を 返す
 s を 宛先にする とは もし s の 互換 ならば s の 基点 + 「/chat/completions」 そうでなければ s の 基点 + 「/api/chat」

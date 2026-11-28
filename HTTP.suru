@@ -167,7 +167,10 @@ s を 長さにする とは s を 数値にする
 #   Content-Type は拡張子から MIME表 で決める(分からなければ application/octet-stream)
 
 # The table of file extensions and their Content-Type, used by `種類判定する`.
-MIME表 とは （「html」 と 「text/html; charset=utf-8」） と （「htm」 と 「text/html; charset=utf-8」） と （「css」 と 「text/css; charset=utf-8」） と （「js」 と 「text/javascript; charset=utf-8」） と （「mjs」 と 「text/javascript; charset=utf-8」） と （「json」 と 「application/json; charset=utf-8」） と （「txt」 と 「text/plain; charset=utf-8」） と （「md」 と 「text/markdown; charset=utf-8」） と （「csv」 と 「text/csv; charset=utf-8」） と （「xml」 と 「application/xml; charset=utf-8」） と （「svg」 と 「image/svg+xml; charset=utf-8」） と （「png」 と 「image/png」） と （「jpg」 と 「image/jpeg」） と （「jpeg」 と 「image/jpeg」） と （「gif」 と 「image/gif」） と （「webp」 と 「image/webp」） と （「avif」 と 「image/avif」） と （「ico」 と 「image/x-icon」） と （「wasm」 と 「application/wasm」） と （「pdf」 と 「application/pdf」） と （「woff」 と 「font/woff」） と （「woff2」 と 「font/woff2」） と （「ttf」 と 「font/ttf」） と （「otf」 と 「font/otf」） と （「mp3」 と 「audio/mpeg」） と （「mp4」 と 「video/mp4」） と （「webm」 と 「video/webm」） と （「zip」 と 「application/zip」）
+MIME表 とは （「html」 と 「text/html; charset=utf-8」） と （「htm」 と 「text/html; charset=utf-8」） と （「css」 と 「text/css; charset=utf-8」） と （「js」 と 「text/javascript; charset=utf-8」） と （「mjs」 と 「text/javascript; charset=utf-8」） と （「json」 と 「application/json; charset=utf-8」） と （「txt」 と 「text/plain; charset=utf-8」） と
+  （「md」 と 「text/markdown; charset=utf-8」） と （「csv」 と 「text/csv; charset=utf-8」） と （「xml」 と 「application/xml; charset=utf-8」） と （「svg」 と 「image/svg+xml; charset=utf-8」） と （「png」 と 「image/png」） と （「jpg」 と 「image/jpeg」） と （「jpeg」 と 「image/jpeg」） と
+  （「gif」 と 「image/gif」） と （「webp」 と 「image/webp」） と （「avif」 と 「image/avif」） と （「ico」 と 「image/x-icon」） と （「wasm」 と 「application/wasm」） と （「pdf」 と 「application/pdf」） と （「woff」 と 「font/woff」） と
+  （「woff2」 と 「font/woff2」） と （「ttf」 と 「font/ttf」） と （「otf」 と 「font/otf」） と （「mp3」 と 「audio/mpeg」） と （「mp4」 と 「video/mp4」） と （「webm」 と 「video/webm」） と （「zip」 と 「application/zip」）
 
 # The Content-Type for the path, from its extension (「application/octet-stream」 when unknown).
 文字列 を 種類判定する は 文字列
@@ -458,4 +461,7 @@ s を 接続 へ 逐次送信する とは
 丙 を （要求 を 数 で 受け取って 甲 の 動作 を 返すこと） で 直接並行待受する は 乙 の 動作
 先 を 処理 で 直接並行待受する とは 先 を （処理 で 直接試行答えすること） で 担当者付待受する
 
-試行答えする と 動作試行答えする と 接続渡し続けする と 担当者開始する と 担当者一人開始する と 担当者付待受する と 十六進値にする と 百分率復号する と 文字列組立する と 危険部品である と 隠し部品である と 中身有である と 見つからない と 禁止 と 方法違い と 不正要求 と 部品配信する と 置場判定する と 道配信する と 中身配信する と 読込配信する と 十六進文字列にする と 十六進字にする と 文字列待受開始する と 直接一件答えする と 直接試行答えする と 直接受付続けする は 非公開とする
+試行答えする と 動作試行答えする と 接続渡し続けする と 担当者開始する と 担当者一人開始する と 担当者付待受する と 十六進値にする と 百分率復号する と
+  文字列組立する と 危険部品である と 隠し部品である と 中身有である と 見つからない と 禁止 と 方法違い と 不正要求 と 部品配信する と 置場判定する と
+  道配信する と 中身配信する と 読込配信する と 十六進文字列にする と 十六進字にする と 文字列待受開始する と 直接一件答えする と 直接試行答えする と
+  直接受付続けする は 非公開とする
